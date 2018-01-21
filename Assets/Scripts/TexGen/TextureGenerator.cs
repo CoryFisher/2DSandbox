@@ -1,13 +1,8 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using UnityEngine;
-
-public enum TextureGenerationType
-{
-	RandomFill,
-	RandomFillFromGridPoints,
-}
 
 public class TextureGenerator : Singleton<TextureGenerator>
 {
@@ -20,11 +15,10 @@ public class TextureGenerator : Singleton<TextureGenerator>
 	private const string outputFileJoiner = "_";
 	private const string outputFileExtension = ".png";
 	private const string metaFileExtension = ".meta";
-	private int currentOutputFileNumber = 0;
 	public int outputTextureWidth = 1000;
 	public int outputTextureHeight = 1000;
 	public TextureGenerationType currentGenerationType;
-
+	
 	// UI
 	public GameObject textureButtonPrefab;
 	public GameObject textureButtonsContentContainer;
@@ -32,8 +26,6 @@ public class TextureGenerator : Singleton<TextureGenerator>
 
 	// Color Palette
 	private List<Color> colorPalette = new List<Color>();
-	
-	public int gridSize = 10;
 
 	private void Start()
 	{
@@ -44,8 +36,6 @@ public class TextureGenerator : Singleton<TextureGenerator>
 		colorPalette.Add(Color.red);
 
 		outputDirectoryPath = Application.dataPath + "/" + outputDirectoryName;
-		currentOutputFileNumber = GetGreatestOutputFileNumber();
-		Debug.Log("currentOutputFileNumber: " + currentOutputFileNumber);
 
 		LoadOutputTextures();
 	}
@@ -56,24 +46,34 @@ public class TextureGenerator : Singleton<TextureGenerator>
 	}
 
 	private void GenerateTexturesInternal(TextureGenerationType generationType)
-	{	
+	{
+		TexGenModule generator;
 		switch (generationType)
 		{
 			case TextureGenerationType.RandomFill:
 				{
-					Color[] colors = new Color[outputTextureWidth * outputTextureHeight];
-					FillWithRandom(ref colors, outputTextureWidth, outputTextureHeight);
-					SaveTextureToFile(CreateTexFromColors(colors));
+					generator = new TexGenRandomFill() { ColorPalette = colorPalette };
 					break;
 				}
-			case TextureGenerationType.RandomFillFromGridPoints:
+			case TextureGenerationType.RandomFillFromRandomGridPoints:
 				{
-					Color[] colors = new Color[outputTextureWidth * outputTextureHeight];
-					FillGridPointsWithRandom(ref colors, outputTextureWidth, outputTextureHeight, 10);
-					SaveTextureToFile(CreateTexFromColors(colors));
+					generator = new TexGenGridPoints() { ColorPalette = colorPalette, StepSize = 10 };
+					break;
+				}
+			case TextureGenerationType.Geometric:
+				{
+					generator = new TexGenGeometric() { ColorPalette = colorPalette };
+					break;
+				}
+			case TextureGenerationType.Default:
+			default:
+				{
+					generator = new TexGenModule() { ColorPalette = colorPalette };
 					break;
 				}
 		}
+		var tex = generator.CreateTexture(outputTextureWidth, outputTextureHeight);
+		SaveTextureToFile(tex, generationType.ToString());
 		
 		// Refresh textures
 		ClearOutputTextures();
@@ -101,7 +101,17 @@ public class TextureGenerator : Singleton<TextureGenerator>
 		}
 	}
 
-	public void SelectTextureButton(TextureButton textureButton)
+	public void SaveSelectedTexture()
+	{
+		if (selectedTextureButton != null)
+		{
+			var tex = selectedTextureButton.GetTexture();
+
+			// TODO
+		}
+	}
+
+			public void SelectTextureButton(TextureButton textureButton)
 	{
 		if (selectedTextureButton != null)
 		{
@@ -111,6 +121,15 @@ public class TextureGenerator : Singleton<TextureGenerator>
 		if (selectedTextureButton != null)
 		{
 			selectedTextureButton.SetSelected();
+		}
+	}
+
+	public void SetColorPalette(List<Color> newColors)
+	{
+		colorPalette = newColors;
+		if (colorPalette == null || colorPalette.Count == 0)
+		{
+			colorPalette.Add(Color.white);
 		}
 	}
 
@@ -126,56 +145,26 @@ public class TextureGenerator : Singleton<TextureGenerator>
 	private void FillWithRandom(ref Color[] colors, int width, int height)
 	{
 		Debug.Log("Filling in pixels...");
-		for (int y = 0; y < height; ++y)
-		{
-			for (int x = 0; x < width; ++x)
-			{
-				int index = (y * width) + x;
-				colors[index] = colorPalette[Random.Range(0, colorPalette.Count)];
-			}
-		}
+		
 	}
 
 	private void FillGridPointsWithRandom(ref Color[] colors, int width, int height, int stepSize)
 	{
 		Debug.Log("Filling in pixels...");
-		int heightStep = height / stepSize;
-		int widthStep = width / stepSize;
-
-		for (int y = 0; y < height; y += heightStep)
-		{
-			for (int x = 0; x < width; x += widthStep)
-			{
-				int index = (y * width) + x;
-				colors[index] = colorPalette[Random.Range(0, colorPalette.Count)];
-			}
-		}
-
-		for (int y = 0; y < height; ++y)
-		{
-			int prevY = (y / (heightStep)) * heightStep;
-			int nextY = (prevY + (heightStep)) % height;
-			float tY = (float)(y % heightStep) / (float)(heightStep);
-
-			for (int x = 0; x < width; ++x)
-			{
-				int prevX = (x / (widthStep)) * widthStep;
-				int nextX = (prevX + (widthStep)) % width;
-				Color prevXColor = Color.Lerp(colors[prevX + (prevY * width)], colors[prevX + (nextY * width)], tY);
-				Color nextXColor = Color.Lerp(colors[nextX + (prevY * width)], colors[nextX + (nextY * width)], tY);
-				float tX = (float)(x % widthStep) / (float)(widthStep);
-				int index = (y * width) + x;
-				colors[index] = Color.Lerp(prevXColor, nextXColor, tX);
-			}
-		}
+		
 	}
 	
-	private void SaveTextureToFile(Texture2D texture)
+	private void SaveTextureToFile(Texture2D texture, string filename)
 	{	
 		Debug.Log("Saving texture to file...");
 		var bytes = texture.EncodeToPNG();
-		string outputFileName = outputFileBaseName + outputFileJoiner + currentOutputFileNumber.ToString() + outputFileExtension;
-		currentOutputFileNumber++;
+		int fileNumber = 0;
+		string outputFileName = filename + outputFileJoiner + fileNumber.ToString() + outputFileExtension;
+		while (File.Exists(outputDirectoryPath + "/" + outputFileName))
+		{
+			fileNumber++;
+			outputFileName = filename + outputFileJoiner + fileNumber.ToString() + outputFileExtension;
+		}
 		var file = File.Open(outputDirectoryPath + "/" + outputFileName, FileMode.Create);
 		var binary = new BinaryWriter(file);
 		binary.Write(bytes);
@@ -263,5 +252,10 @@ public class TextureGenerator : Singleton<TextureGenerator>
 
 			}
 		}
+	}
+
+	public void SetTexGenType(TextureGenerationType newType)
+	{
+		currentGenerationType = newType;
 	}
 }

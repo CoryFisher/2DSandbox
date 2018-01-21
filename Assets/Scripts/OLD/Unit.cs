@@ -8,8 +8,9 @@ public class Unit : MonoBehaviour
 	public int health = 1;
 	
 	public float moveSpeed = 1.0f;
-	private float sqrMoveSpeed;
-	
+	//private float sqrMoveSpeed = 0.0f;
+
+
 	public Vector2 destination = Vector2.zero;
 
 	public int resources = 0;
@@ -24,7 +25,7 @@ public class Unit : MonoBehaviour
 	private void Start()
 	{
 		moveSpeed = moveSpeed + UnityEngine.Random.Range(0.0f, 5.0f);
-		sqrMoveSpeed = moveSpeed * moveSpeed;
+		//sqrMoveSpeed = moveSpeed * moveSpeed;
 
 		rigidBody = GetComponent<Rigidbody2D>();
 
