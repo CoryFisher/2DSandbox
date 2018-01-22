@@ -105,7 +105,7 @@ public class TextureGenerator : Singleton<TextureGenerator>
 	{
 		if (selectedTextureButton != null)
 		{
-			var tex = selectedTextureButton.GetTexture();
+			//var tex = selectedTextureButton.GetTexture();
 
 			// TODO
 		}
