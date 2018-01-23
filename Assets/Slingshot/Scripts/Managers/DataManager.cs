@@ -6,11 +6,10 @@ using UnityEngine;
 public class DataManager : Singleton<DataManager>
 {
 	[System.Serializable]
-	public class ProjectileData
+	public static class ProjectileData
 	{
-		public Bullet.Data[] bullet;
+		public static Bullet.BulletData[] bulletLevelData;
 	}
-	public ProjectileData projectiles;
 	Dictionary<Type, object[]> projectileDataDict;
 
 	private void Awake()
@@ -20,7 +19,7 @@ public class DataManager : Singleton<DataManager>
 		// TODO: load data from disk
 		
 		projectileDataDict = new Dictionary<Type, object[]>();
-		projectileDataDict.Add(typeof(Bullet), projectiles.bullet);
+		//projectileDataDict.Add(typeof(Bullet), projectiles.bullet);
 	}
 
 	public System.Object GetProjectileData(Type type, int level)

@@ -2,27 +2,32 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-public class Bullet : MonoBehaviour, IProjectileBehavior
+public class Bullet : Projectile
 {
 	[System.Serializable]
-	public class Data
+	public class BulletData : Data
 	{
 		public float speed;
+		public float rechargeTime;
 	}
-	private Data data;
+	private BulletData bulletData;
+	private float timer = 0.0f;
 
-	public void SetLevel(int level)
+	public override void Initialize(int level)
 	{
-		data = DataManager.Get().GetProjectileData(typeof(Bullet), level) as Data;
+		data = DataManager.Get().GetProjectileData(typeof(BulletData), level) as Data;
 	}
 
-	public void Fire(Vector3 direction)
+	public override void Fire(Vector3 direction)
 	{
-		var rb = GetComponent<Rigidbody2D>();
-		rb.velocity = direction.normalized * data.speed;
+		if (timer > data.rechargeTime)
+		{
+			var rb = GetComponent<Rigidbody2D>();
+			rb.velocity = direction.normalized * data.speed;
+		}
 	}
 
-	public bool OnCollision(GameObject collidingObject)
+	public override bool OnCollision(GameObject collidingObject)
 	{
 		if (collidingObject.CompareTag("Enemy"))
 		{
@@ -31,8 +36,9 @@ public class Bullet : MonoBehaviour, IProjectileBehavior
 		return false;
 	}
 
-	public void OnUpdate()
+	public override void OnUpdate()
 	{
-
+		
+		timer += Time.deltaTime;
 	}
 }

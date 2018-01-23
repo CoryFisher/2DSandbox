@@ -1,102 +1,90 @@
-﻿using System;
-using System.Collections;
+﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
 public class Projectile : MonoBehaviour
 {
-	private bool expiresOnDistance;
-	private Vector3 expiryDistancePoint;
-	private float maxDistance;
-	
-	private bool expiresOnLifetime;
-	private float expiryTime;
-
-	private IProjectileBehavior projectileBehavior;
-	
-	public void ExpireByDistance(Vector3 point, float dist)
+	public class Data
 	{
-		expiresOnDistance = true;
-		expiryDistancePoint = point;
-		maxDistance = dist;
+		public bool expiresOnDistance;
+		public Vector3 expiryDistanceStartPoint;
+		public float maxDistance;
+
+		public bool expiresOnLifetime;
+		public float lifetime;
 	}
+	protected Data data;
+	protected Rigidbody2D rb;
+	
+	// VIRTUALS
 
-	public void ExpireByLifetime(float time)
+	public virtual void Initialize(int level)
 	{
-		expiresOnLifetime = true;
-		expiryTime = Time.time + time;
+		data = DataManager.Get().GetProjectileData(this.GetType(), level) as Data;
 	}
-
-	public void Fire(Vector3 direction)
+	
+	public virtual void Fire(Vector3 direction)
 	{
-		if (projectileBehavior != null)
+		if (data.expiresOnDistance)
 		{
-			projectileBehavior.Fire(direction);
+			data.expiryDistanceStartPoint = 
+		}
+
+		if (data.expiresOnLifetime) 
+		{
+
 		}
 	}
 
-	public void SetBehavior(IProjectileBehavior behavior)
+	protected virtual void OnUpdate()
 	{
-		projectileBehavior = behavior;
-	}
-
-	protected void Expire()
-	{
-		// remove projectile behavior
-		if (projectileBehavior != null)
+		if (data.expiresOnDistance)
 		{
-			Component behavior = GetComponent(projectileBehavior.GetType());
-			Destroy(behavior);
-			behavior = null;
+			var distSqr = (data.expiryDistanceStartPoint - transform.position).sqrMagnitude;
+			if (distSqr > data.maxDistance * data.maxDistance)
+			{
+				Expire();
+			}
 		}
 
-		// deactivate
+		if (data.expiresOnLifetime)
+		{
+			if (Time.time > data.lifetime)
+			{
+				Expire();
+			}
+		}
+	}
+
+	protected virtual void OnCollision(GameObject collidingObject)
+	{
+		Expire();
+	}
+
+	protected virtual void Expire()
+	{
+		rb.velocity = Vector3.zero;
 		gameObject.SetActive(false);
 	}
 
+	// COLLISION TRIGGERS
+	void OnCollisionEnter2D(Collision2D collision)
+	{
+		OnCollision(collision.gameObject);
+	}
+	void OnTriggerEnter2D(Collider2D collision)
+	{
+		OnCollision(collision.gameObject);
+	}
+
+	// UPDATE TRIGGER
 	private void Update()
 	{
-		if (expiresOnDistance)
-		{
-			var distSqr = (expiryDistancePoint - transform.position).sqrMagnitude;
-			if (distSqr > maxDistance * maxDistance)
-			{
-				Expire();
-			}
-		}
-
-		if (expiresOnLifetime)
-		{
-			if (Time.time > expiryTime)
-			{
-				Expire();
-			}
-		}
-
-		if (projectileBehavior != null)
-		{
-			projectileBehavior.OnUpdate();
-		}
+		OnUpdate();
 	}
 
-	private void OnCollisionEnter2D(Collision2D collision)
+	private void Awake()
 	{
-		OnCollision(collision.gameObject);
-	}
-
-	private void OnTriggerEnter2D(Collider2D collision)
-	{
-		OnCollision(collision.gameObject);
-	}
-
-	private void OnCollision(GameObject collidingObject)
-	{
-		if (projectileBehavior != null)
-		{
-			if (projectileBehavior.OnCollision(collidingObject))
-			{
-				Expire();
-			}
-		}
+		rb = GetComponent<Rigidbody2D>();
 	}
 }

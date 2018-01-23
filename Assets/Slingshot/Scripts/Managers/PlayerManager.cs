@@ -15,6 +15,7 @@ public class PlayerManager : Singleton<PlayerManager>
 
 	// Editor Values
 	public GameObject playerPrefab;
+	// TODO: move to Data Manager
 	public PlayerStats playerStats;
 	
 
