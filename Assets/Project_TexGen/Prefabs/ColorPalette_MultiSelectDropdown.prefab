@@ -565,7 +565,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 8edfaa192c7339549b2c091a18378d0c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  contentTemplate: {fileID: 1144822741848166}
+  dropdownMenu: {fileID: 0}
+  dropdownItemContainer: {fileID: 0}
   itemTemplate: {fileID: 1410201999549434}
 --- !u!114 &114657771517343586
 MonoBehaviour:

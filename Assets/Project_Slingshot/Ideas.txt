@@ -1,0 +1,62 @@
+Weapons
+
+combine weapon attributes in many fun ways
+
+attributes scale with weapon damage[i] = damage[i] * log(sum(damage[~i]))
+
+bullet, 
+	magnetic, bullets pull enemies toward impact, med damage
+	explosive, large impact with AOE, low damage
+	rail gun, charge and fire, high damage
+	ricochet, bounces around, loses damage per bounce
+	crazy ivan, fires many small lazers within a cone/angle
+	
+	
+
+laser, instant impact, damage per tick
+	cold, slows enemies over time while held, less damage to slowed enemies
+	hot, more damage over time while held, can overheat
+	neutrino, passes through enemies, no impact effect
+	tractor beam, pulls enemies towards it's center
+	
+	
+
+torpedo
+	smart, pathfinds to targets
+	neutron, pulls enemies toward it
+	kelvin, slows enemies in blast radius
+	phoenix, spawns another torpedo if it kills, else a fireball
+	flank, spawns smaller torpedos in opposite direction of impact
+	proximity, slows down to a standstill, explodes near enemies
+	thermite, high damage on single target
+	propulsion, accelerates at an increasing rate, more speed == more damage
+
+
+Movement
+
+handling, ratio of average propulsion force to max speed, accel / max velocity
+
+Retro engine, high handling, moves in mostly straight lines in cardinal directions
+Propulsion engine, slightly slippery
+Putter engine, small intermittent boosts of med handling
+Burst engine, large burst of speed and handling that bottoms out over time to recharge
+
+
+
+
+
+
+
+
+
+Enemies
+
+
+
+
+shield
+
+hull
+
+weapon
+

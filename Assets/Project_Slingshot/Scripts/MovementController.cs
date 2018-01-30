@@ -58,7 +58,7 @@ public class MovementController : MonoBehaviour
 
 	private void SlingshotController_OnDragEnd()
 	{
-		float playerMoveSpeedMax = PlayerManager.Get().playerStats.maxMovementSpeed;
+		float playerMoveSpeedMax = PlayerManager.Get().GetPlayerData().maxMovementSpeed;
 		rb.velocity = currentDrag.normalized * -playerMoveSpeedMax * (currentDrag.magnitude / lineMaxLength);
 		rb.simulated = true;
 
