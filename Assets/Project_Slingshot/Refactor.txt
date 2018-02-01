@@ -1,0 +1,31 @@
+Rafactor firing systems:
+
+Create WeaponManager, which holds a ProjectileManager and a LaserManager
+	ProjectileManager
+	LaserManager
+	currentManager
+	OnInputDown_Fire : currentManager.FireStart
+	OnInputUp_Fire 	: currentManager.FireEnd
+
+	ProjectileManager holds a list of ObjectPools and notifies the current selected controller about input events
+		ObjectPool[]
+		current
+		FireStart 	: firing = true
+		Mono Update	: firing ? timer > time ? current.GetNext().Fire()
+		FireEnd 	: firing = false
+
+		
+
+			Projectile is the script for the prefab of the projectile, handles collision and travel-time actions using data set by ProjectileController
+				Mono OnCollision : wall ? Expire , enemy ? enemy.damage + Expire
+				Mono Update	: lifetime ?, distance ?
+				Expire 		: active = false
+				Fire 		: velocity = direction * speed
+
+	LaserManager holds a list of LaserControllers and notifies the current selected controller about input events
+
+		Laser handles the activation and raycasting of the laser
+
+
+
+TODO: factor out object pool class from ProjectileController and pass firing logic up to PManager

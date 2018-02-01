@@ -2,140 +2,92 @@
 using System.Collections.Generic;
 using UnityEngine;
 
+[RequireComponent(typeof(CollisionEvent))]
 public class Projectile : MonoBehaviour
 {
-	public bool expiresOnDistance = true;
-	public float distanceMax = 10.0f;
+	[System.Serializable]
+	public class ProjectileProperties
+	{
+		public Color color = Color.white;
+
+		public bool expiresOnDistance = true;
+		public float distanceMax = 10.0f;
+
+		public bool expiresOnLifetime = true;
+		public float lifetime = 10.0f;
+
+		public float reloadTime = 1.0f;
+
+		public float speed = 1.0f;
+		public float damage = 1.0f;
+	}
+	public ProjectileProperties projectile;
+
+	// protected
+	protected Rigidbody2D rb;
+
+	// private
 	private Vector3 distanceStartPoint;
-
-	public bool expiresOnLifetime = true;
-	public float lifetime = 10.0f;
 	private float lifeTimer;
+	private CollisionEvent collisionEvent;
 
-	public bool usesReloadTime = true;
-	public float reloadTime = 1.0f;
-	private float reloadTimer;
-	private bool firing;
-
-	#region Private
+	private void Awake()
+	{
+		collisionEvent = GetComponent<CollisionEvent>();
+		collisionEvent.OnCollision += OnCollision;
+		rb = GetComponent<Rigidbody2D>();
+	}
+	
+	public virtual void Fire(Vector3 position, Vector3 target)
+	{
+		rb.velocity = (target - position).normalized * projectile.speed;
+		lifeTimer = 0.0f;
+		distanceStartPoint = position;
+	}
 
 	private void Update()
 	{
-		if (usesReloadTime)
-		{
-			reloadTimer += Time.deltaTime;
-		}
-
-		if (expiresOnLifetime)
+		if (projectile.expiresOnLifetime)
 		{
 			lifeTimer += Time.deltaTime;
-			if (lifeTimer > lifetime)
+			if (lifeTimer > projectile.lifetime)
 			{
 				Expire();
 				return;
 			}
 		}
 
-		if (expiresOnDistance)
+		if (projectile.expiresOnDistance)
 		{
 			var distSqr = (distanceStartPoint - transform.position).sqrMagnitude;
-			if (distSqr > distanceMax * distanceMax)
+			if (distSqr > projectile.distanceMax * projectile.distanceMax)
 			{
 				Expire();
 				return;
 			}
 		}
-
-		OnUpdate();
 	}
-
-	private void OnCollisionEnter2D(Collision2D collision)
+	
+	protected void OnCollision(GameObject collidingObject)
 	{
-		OnCollision(collision.gameObject);
+		if (collidingObject.CompareTag("Enemy"))
+		{
+			Enemy enemy = collidingObject.GetComponent<Enemy>();
+			if (enemy != null)
+			{
+				enemy.TakeDamage(projectile.damage);
+			}
+			Expire();
+		}
+		else if (!collidingObject.CompareTag("PlayerProjectile") &&
+				 !collidingObject.CompareTag("Player"))
+		{
+			Expire();
+		}
 	}
-
-	private void OnTriggerEnter2D(Collider2D collision)
-	{
-		OnCollision(collision.gameObject);
-	}
-
-	#endregion
-
-	#region Protected
 
 	protected void Expire()
 	{
-		OnExpire();
 		gameObject.SetActive(false);
 	}
-
-	#endregion
-
-	#region Public
-
-	public void Initialize()
-	{
-		lifeTimer = 0.0f;
-		reloadTimer = 0.0f;
-		firing = false;
-
-		OnInitialize();
-	}
-
-	public void FireStart(Vector3 position, Vector3 target)
-	{
-		if (usesReloadTime)
-		{
-			if (reloadTimer > reloadTime)
-			{
-				OnFireStart(position, target);
-				reloadTimer = 0.0f;
-				firing = true;
-			}
-		}
-		else
-		{
-			OnFireStart(position, target);
-			firing = true;
-		}
-	}
-
-	public void FireEnd()
-	{
-		if (firing)
-		{
-			OnFireEnd();
-			firing = false;
-		}
-	}
-
-	#endregion
-
-	#region Virtual
-	
-	protected virtual void OnInitialize()
-	{
-	}
-	
-	protected virtual void OnFireStart(Vector3 position, Vector3 target)
-	{
-	}
-
-	protected virtual void OnFireEnd()
-	{
-	}
-	
-	protected virtual void OnUpdate()
-	{
-	}
-
-	protected virtual void OnCollision(GameObject collidingObject)
-	{
-	}
-
-	protected virtual void OnExpire()
-	{
-	}
-
-	#endregion
 }

@@ -2,33 +2,32 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-[System.Serializable]
-public class PlayerData
-{
-	public float maxMovementSpeed = 5.0f;
-}
-
 public class PlayerManager : Singleton<PlayerManager>
 {
 	// private cache
 	private GameObject playerObject;
+	private Player playerScript;
 	private Rigidbody2D playerRigidbody;
-	private PlayerData playerData;
 
 	// Editor Values
 	public GameObject playerPrefab;
-
 	
 	// Private Methods
 
 	private void Awake()
 	{
 		RegisterSingletonInstance(this);
+		FindOrSpawnPlayer(Vector2.zero);
 	}
 	
-	private void SpawnPlayer(Vector2 position)
+	private void FindOrSpawnPlayer(Vector2 position)
 	{
-		playerObject = Instantiate(playerPrefab, position, Quaternion.identity);
+		playerObject = GameObject.FindGameObjectWithTag("Player");
+		if (playerObject == null)
+		{
+			playerObject = Instantiate(playerPrefab, position, Quaternion.identity);
+		}
+		playerScript = playerObject.GetComponent<Player>();
 		playerRigidbody = playerObject.GetComponent<Rigidbody2D>();
 	}
 
@@ -47,7 +46,12 @@ public class PlayerManager : Singleton<PlayerManager>
 
 	public Vector3 GetPlayerFiringPosition()
 	{
-		return playerObject.transform.position;
+		return playerScript.firingPosition.position;
+	}
+
+	public void SetPlayerOverlayColor(Color color)
+	{
+		playerScript.overlaySpriteRenderer.color = color;
 	}
 
 	public Rigidbody2D GetPlayerRigidbody()
@@ -57,6 +61,6 @@ public class PlayerManager : Singleton<PlayerManager>
 
 	public PlayerData GetPlayerData()
 	{
-		return playerData;
+		return playerScript.data;
 	}
 }
