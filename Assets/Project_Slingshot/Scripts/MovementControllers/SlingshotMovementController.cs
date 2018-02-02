@@ -2,21 +2,25 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-public class MovementController : MonoBehaviour
+public class SlingshotMovementController : MonoBehaviour
 {
 	private Rigidbody2D rb;
 	private LineRenderer lineRenderer;
 	private float lineMaxLengthSqr;
 	private Vector3 currentDrag;
+	private Vector3 dragStart;
 
-	// Editor values
+	// Editor values for UI
 	public float lineStartWidth = 0.25f;
 	public float lineMaxWidth = 1.0f;
 	public float lineMaxLength = 2.5f;
 	public Color lineStartColor = Color.white;
 	public Color lineEndColor = Color.red;
+	//public bool renderLineOnMousePos = true;
+	public enum LineRenderPosition { dragStart, mouse, player }
+	public LineRenderPosition lineRenderPosition;
 
-	
+
 	// Private
 
 	private void Awake()
@@ -46,8 +50,9 @@ public class MovementController : MonoBehaviour
 	private void SlingshotController_OnDragStart()
 	{
 		rb.velocity = Vector3.zero;
-
-		UpdateDrag(DragManager.Get().GetDragPoints());
+		var points = DragManager.Get().GetDragPoints();
+		dragStart = points.Start;
+		UpdateDrag(points);
 		lineRenderer.enabled = true;
 	}
 
@@ -76,8 +81,22 @@ public class MovementController : MonoBehaviour
 		}
 
 		// set line position
-		lineRenderer.SetPosition(0, (Vector3)rb.position);
-		lineRenderer.SetPosition(1, (Vector3)rb.position + currentDrag);
+		switch (lineRenderPosition)
+		{
+			case LineRenderPosition.dragStart:
+				lineRenderer.SetPosition(0, dragStart);
+				lineRenderer.SetPosition(1, dragStart + currentDrag);
+				break;
+			case LineRenderPosition.mouse:
+				var mousepos = DragManager.GetMouseWorldPosition();
+				lineRenderer.SetPosition(0, mousepos);
+				lineRenderer.SetPosition(1, mousepos + currentDrag);
+				break;
+			case LineRenderPosition.player:
+				lineRenderer.SetPosition(0, (Vector3)rb.position);
+				lineRenderer.SetPosition(1, (Vector3)rb.position + currentDrag);
+				break;
+		}
 
 		// set line width lerped
 		lineRenderer.endWidth = Mathf.Lerp(lineStartWidth, lineMaxWidth, currentDrag.sqrMagnitude / lineMaxLengthSqr);
