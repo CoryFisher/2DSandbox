@@ -1,0 +1,55 @@
+Things to see and do
+
+
+Alphabet Selection
+
+given a spread of letters you must select the letters given by the instructions
+
+- A to Z in order
+- Z to A, reverse order
+- Curvy letters,
+- Straight Letters
+
+TODO:
+- abstract to data instead of letters
+	- data:
+		- name
+		- image
+		- number
+		- etc...
+	- "Data Selection"
+	- "given a group of data you must select the correct group/sequence given by the instructions"
+
+- 
+
+
+//// WAYYYYY OVER HYPED HERE, ONLY HAVE TIME FOR PREPLANNED COMPLEXITY ESCALATION
+
+// DATA TYPE LETTERS
+- Select the Letters in order (small group of random letters, choose all in order, no penalty, selected are marked/removed)
+- Select the Letters in reverse order (small group of random letters, choose all in reverse order, no penalty, no mark/remove)
+- Select only the Letters in the word Myxlpiklik (required letters with duplicates and padding, choose only contained else restart, letters move/rotate/swap when selected)
+- Select only the Letters that are curvy or vertically symmetrical, but not both, in reverse order (all letters, restart on fail)
+- Select SEWING (a sea of Z,F,M,T,Q,C with single S,E,W,I,N,G hidden in it)
+
+
+
+
+
+
+- separate Ordered from Unordered queries
+	- ordered:
+		- constant sorted array of data
+		- iterate to completion
+	- unordered:
+		- subset of total set
+		- remove items as selected until empty
+
+
+
+
+
+
+Traffic jam/ Grid lock puzzle
+
+Classic. Move the small object through the gridlock of varying sized (or shaped?) obejects
