@@ -31,34 +31,38 @@ namespace SelectionProcedures
 	
 	public class LetterAttributeSelectionProcedure : ISelectionProcedure
 	{
+		LetterAttribute letterAttribute;
 		bool ordered;
 		bool reversed;
 
-		readonly string[] validDataNames;
+		string[] validDataNames;
 		List<string> selectionPool;
 		int currentIndex;
 
 		public LetterAttributeSelectionProcedure(LetterAttribute letterAttribute, bool ordered = false, bool reversed = false)
 		{
+			this.letterAttribute = letterAttribute;
 			this.ordered = ordered;
 			this.reversed = reversed;
-
-			validDataNames = DataSelectionDataController.Get().GetAlphabetStrings(letterAttribute);
-			selectionPool = new List<string>(validDataNames.Length);
+			selectionPool = new List<string>();
 		}
 
 		public DisplayData[] GetDataSet()
 		{
-			return DataSelectionDataController.Get().GetAlphabetDisplayData(LetterAttribute.All);
+			return DataSelectionDataController.Get().GetAlphabetDisplayData(LetterAttribute.None);
 		}
 
 		public string GetInstructionText()
 		{
-			return "Select the letters in order from A to Z";
+			string attrName = LetterAttributeHelper.GetLetterAttributeName(letterAttribute);
+			string attrString = (letterAttribute != LetterAttribute.None) ? (attrName + ' ') : "";
+			string orderedString = ordered ? "in " + (reversed ? "reverse " : "") + "alphabertical order" : "";
+			return "Select all " + attrString + "letters " + orderedString;
 		}
 
 		public void Initialize()
 		{
+			validDataNames = DataSelectionDataController.Get().GetAlphabetStrings(letterAttribute);
 			if (ordered)
 			{
 				if (reversed)
@@ -71,7 +75,7 @@ namespace SelectionProcedures
 				}
 			}
 			else
-			{
+			{	
 				selectionPool.Clear();
 				selectionPool.AddRange(validDataNames);
 			}
@@ -109,6 +113,7 @@ namespace SelectionProcedures
 			else if (selectionPool.Contains(selectedData.Name))
 			{
 				selectionPool.Remove(selectedData.Name);
+				return true;
 			}
 			return false;
 		}
@@ -137,8 +142,14 @@ namespace SelectionProcedures
 			// register selection procedures
 			selectionProcedures = new ISelectionProcedure[Enum.GetValues(typeof(SelectionProcedureType)).Length];
 
-			selectionProcedures[(int)SelectionProcedureType.ForwardOrder] = new LetterAttributeSelectionProcedure(LetterAttribute.All, true, false);
-			selectionProcedures[(int)SelectionProcedureType.ReverseOrder] = new LetterAttributeSelectionProcedure(LetterAttribute.All, true, true);
+			// TODO: remove SelectionProcedureType in favor of on-demand creation of selection procedures with given attributes
+				// none
+				// straight/curvy
+				// horizontal/vertical symmetry
+				// in order/reverse order
+				// vowel/consoant
+			selectionProcedures[(int)SelectionProcedureType.ForwardOrder] = new LetterAttributeSelectionProcedure(LetterAttribute.None, true, false);
+			selectionProcedures[(int)SelectionProcedureType.ReverseOrder] = new LetterAttributeSelectionProcedure(LetterAttribute.None, true, true);
 			selectionProcedures[(int)SelectionProcedureType.StraightSet] = new LetterAttributeSelectionProcedure(LetterAttribute.Straight);
 			selectionProcedures[(int)SelectionProcedureType.CurvySet] = new LetterAttributeSelectionProcedure(LetterAttribute.Curvy);
 			selectionProcedures[(int)SelectionProcedureType.VerticallySymmetricalSet] = new LetterAttributeSelectionProcedure(LetterAttribute.VerticallySymmetric);

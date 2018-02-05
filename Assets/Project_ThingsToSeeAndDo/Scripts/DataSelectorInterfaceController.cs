@@ -44,6 +44,8 @@ public class DataSelectorInterfaceController : MonoBehaviour
 
 	private void InitializeFor(SelectionProcedureType spType)
 	{
+		Debug.Log("InitializeFor( "+spType+" )");
+
 		// init controller
 		selectionProcedureController.Initialize(spType);
 

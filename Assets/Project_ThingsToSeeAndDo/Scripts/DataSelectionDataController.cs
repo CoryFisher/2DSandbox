@@ -13,11 +13,28 @@ public class DisplayData
 
 public enum LetterAttribute
 {
-	All,
+	None,
 	Curvy,
 	Straight,
 	VerticallySymmetric,
 	HorizontallySymmetric,
+}
+
+public static class LetterAttributeHelper
+{	
+	private static readonly string[] LetterAttributeNames =
+	{
+		"all",
+		"curvy",
+		"straight",
+		"vertically symmetric",
+		"horizontally symmetric",
+	};
+
+	public static string GetLetterAttributeName(LetterAttribute attr)
+	{
+		return LetterAttributeNames[(int)attr];
+	}
 }
 
 public class DataSelectionDataController : Singleton<DataSelectionDataController>
@@ -36,7 +53,7 @@ public class DataSelectionDataController : Singleton<DataSelectionDataController
 		RegisterSingletonInstance(this);
 
 		letterAttributeStringLists = new string[Enum.GetValues(typeof(LetterAttribute)).Length][];
-		letterAttributeStringLists[(int)LetterAttribute.All] = alphabet;
+		letterAttributeStringLists[(int)LetterAttribute.None] = alphabet;
 		letterAttributeStringLists[(int)LetterAttribute.Curvy] = curvy;
 		letterAttributeStringLists[(int)LetterAttribute.Straight] = straight;
 		letterAttributeStringLists[(int)LetterAttribute.VerticallySymmetric] = verticallySymmetric;
