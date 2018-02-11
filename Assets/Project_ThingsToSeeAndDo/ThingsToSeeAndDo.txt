@@ -53,3 +53,30 @@ TODO:
 Traffic jam/ Grid lock puzzle
 
 Classic. Move the small object through the gridlock of varying sized (or shaped?) obejects
+
+Things you'll need to procedurally generate levels:
+
+A generator
+	- Uses game pieces and level construction rules to construct levels
+
+A solver
+	- Makes all possible actions to move between game states and find a possible solution to a level
+
+Rules of the game:
+	- you must move the 2-tile player/car through the board from entrance to exit
+		- try solving from both ends and see where they meet in the middle?
+	- you can move any piece in the direction it's facing (north/south, east/west)
+		- try any piece in any direction?
+
+RULES
+a) from current position try to move in any direction
+b) if there is a change in the board situation, check if the situation is new or you already were in such a situation
+c) if a new situation, store it along with solution depth (number of moves to get into this situation) 
+d) if previously was in this situation and solution depth was equal or lower, terminate this branch. 
+	Else, remove old situation (as you just got into it with less moves) and continue.
+
+There are also other rules, 
+like checking matches and thus terminating the whole process when a solution is found and later new rules when features were added, but this is the core of the solver. 
+It quickly cuts whole branches without a solution. 
+Beside solution depth, it also references to parent situations stored in each board situation, 
+so it is easy to print the final solution in the end.

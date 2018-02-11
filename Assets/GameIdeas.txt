@@ -1,0 +1,14 @@
+Idle Game
+
+You have a power source and can control where the power goes with power lines
+	power lines cost resources to create
+	they have a limited throughput
+		some modules require energy in minimum packets, which necessitates the use of power storage modules
+Power can go to different machines/modules to make them run
+	Power can go one module at a time
+		Power can be split but the splitter needs some power to run so it's slightly less efficient than each, one at a time
+When modules run they accumulate resources
+Resources can be used in different upgrade processes
+	Output per power core
+	Number of power cores
+	Power line section throughput
