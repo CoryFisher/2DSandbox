@@ -32,11 +32,21 @@ public class MazeSolver : Singleton<MazeSolver>
 		RegisterSingletonInstance(this);
 	}
 
-	public void CalculateShortestPath(MazeObject mazeObject)
+	public void CalculateShortestPath(MazeObject mazeObject, bool async = false)
 	{
 		this.mazeObject = mazeObject;
 		finished = false;
-		StartCoroutine("CoCalculateShortestPath");
+
+		if (async)
+		{
+			StartCoroutine("CoCalculateShortestPath");
+		}
+		else
+		{
+			var co = CoCalculateShortestPath();
+			while (co.MoveNext()) { }
+			finished = true;
+		}
 	}
 
 	public bool FinishedCalculating()
@@ -46,7 +56,11 @@ public class MazeSolver : Singleton<MazeSolver>
 
 	public MazePath GetPath()
 	{
-		return path;
+		if (finished)
+		{
+			return path;
+		}
+		return null;
 	}
 
 	IEnumerator CoCalculateShortestPath()

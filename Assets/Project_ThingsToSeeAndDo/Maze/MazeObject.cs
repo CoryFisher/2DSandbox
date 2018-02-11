@@ -14,13 +14,10 @@ public class MazeData
 	MazeCellData startCell;
 	MazeCellData endCell;
 
-	public float OrthographicCameraSize { get; private set; }
-
 	public MazeData(int columns, int rows)
 	{
 		this.columns = columns;
 		this.rows = rows;
-		OrthographicCameraSize = Mathf.Max(columns, rows) / 2f;
 
 		// create array to hold cells
 		cells = new MazeCellData[columns * rows];
@@ -72,6 +69,8 @@ public class MazeData
 
 	public IEnumerator GenerateMaze()
 	{
+		Debug.Log("MazeData::GenerateMaze()");
+
 		// generate maze from cells using recursive backtracking (depth-first) algorithm
 		MazeCellData current = GetCell(0);
 		current.SetVisited(true);
@@ -134,6 +133,7 @@ public class MazeData
 				endCell = cell;
 				cell.SetIsEndCell(true);
 			}
+			yield return null;
 		}
 	}
 	
@@ -182,13 +182,69 @@ public class MazeData
 
 public class MazeObject : MonoBehaviour
 {
-	MazeCellObject[] cellObjects;
 	MazeData mazeData;
-	
-	public IEnumerator CreateMaze(int numColumns, int numRows, GameObject cellObjectPrefab)
+	MazeCellObject[] cellObjects;
+	GameObject gridCellPrefab;
+	int columns = -1;
+	int rows = -1;
+
+	public void SetDimensions(int columns, int rows)
 	{
-		// create dummy cell object to get its information
-		var cellObj = Instantiate(cellObjectPrefab);
+		this.columns = columns;
+		this.rows = rows;
+	}
+
+	public void SetCellPrefab(GameObject gridCellPrefab)
+	{
+		this.gridCellPrefab = gridCellPrefab;
+	}
+
+	public MazeData GetMazeData()
+	{
+		return mazeData;
+	}
+	
+	public IEnumerator CreateMaze()
+	{
+		if (gridCellPrefab == null ||
+			columns < 0 || rows < 0)
+		{
+			Debug.LogError("MazeObject::CoCreateMaze() : Must set dimensions and cell prefabs before calling CreateMaze");
+			yield break;
+		}
+
+		Debug.Log("MazeObject::CreateMaze()");
+
+		if (cellObjects != null)
+		{
+			foreach (var cellObj in cellObjects)
+			{
+				Destroy(cellObj.gameObject);
+			}
+		}
+		cellObjects = new MazeCellObject[columns * rows];
+		
+		LayoutData layoutData = GetLayoutDataFromDummyObject();
+		mazeData = new MazeData(columns, rows);
+		CreateAndFillCells(layoutData, mazeData);
+
+		var co = mazeData.GenerateMaze();
+		while (co.MoveNext())
+		{ 
+			yield return null;
+		}
+	}
+
+	struct LayoutData
+	{
+		public Vector2 MinWorldPosition { get; set; }
+		public float CellPlacementWorldOffset { get; set; }
+	}
+
+	LayoutData GetLayoutDataFromDummyObject()
+	{
+		// create dummy cell object to calculate layout information
+		var cellObj = Instantiate(gridCellPrefab);
 		var cellScript = cellObj.GetComponent<MazeCellObject>();
 
 		float cellPixelWidth = cellScript.cellSpriteRenderer.sprite.texture.width;
@@ -196,47 +252,47 @@ public class MazeObject : MonoBehaviour
 		float cellWorldWidth = cellPixelWidth / pixelsPerUnit;
 		float cellPlacementWorldOffset = cellWorldWidth * 0.75f;
 
-		float gridWidth = (numColumns * cellPlacementWorldOffset) + (cellWorldWidth * 0.25f);
+		float gridWidth = (columns * cellPlacementWorldOffset) + (cellWorldWidth * 0.25f);
 		float minWorldPosX = gridWidth * -0.5f;
-		float gridHeight = (numRows * cellPlacementWorldOffset) + (cellWorldWidth * 0.25f);
-		float minPosY = gridHeight * -0.5f;
+		float gridHeight = (rows * cellPlacementWorldOffset) + (cellWorldWidth * 0.25f);
+		float minWorldPosY = gridHeight * -0.5f;
 
 		// destroy dummy cell
 		Destroy(cellObj);
 		cellObj = null;
 		cellScript = null;
 
-		// create maze data
-		mazeData = new MazeData(numColumns, numRows);
-		Camera.main.orthographicSize = mazeData.OrthographicCameraSize;
-		cellObjects = new MazeCellObject[numColumns * numRows];
+		return new LayoutData { 
+			MinWorldPosition = new Vector2(minWorldPosX, minWorldPosY), 
+			CellPlacementWorldOffset = cellPlacementWorldOffset,
+		};
+	}
 
-		// create cell objects and fill with maze data
-		for (int row = 0; row < numRows; ++row)
+	void CreateAndFillCells(LayoutData layoutData, MazeData mazeData)
+	{
+		for (int row = 0; row < rows; ++row)
 		{
-			for (int col = 0; col < numColumns; ++col)
+			for (int col = 0; col < columns; ++col)
 			{
 				// create cell object
-				cellObj = Instantiate(cellObjectPrefab);
+				var cellObj = Instantiate(gridCellPrefab);
+
 				// place object in world space
-				cellObj.transform.position = new Vector3(minWorldPosX + (col * cellPlacementWorldOffset), minPosY + (row * cellPlacementWorldOffset), 0);
+				cellObj.transform.position = new Vector3(layoutData.MinWorldPosition.x + (col * layoutData.CellPlacementWorldOffset),
+														 layoutData.MinWorldPosition.y + (row * layoutData.CellPlacementWorldOffset), 
+														 0);
+				
 				// child under this gameObject
 				cellObj.transform.SetParent(transform);
+
 				// get cell data and object scripts
 				var cellObjScript = cellObj.GetComponent<MazeCellObject>();
-				var cellDataScript = mazeData.GetCell(col, row);
-				cellObjects[(row * numColumns) + col] = cellObjScript;
+				cellObjects[(row * columns) + col] = cellObjScript;
 
+				var cellDataScript = mazeData.GetCell(col, row);
 				cellDataScript.SetParentObject(cellObjScript);
 				cellObjScript.SetData(cellDataScript);
 			}
 		}
-
-		yield return mazeData.GenerateMaze();
-	}
-	
-	public MazeData GetMazeData()
-	{
-		return mazeData;
 	}
 }

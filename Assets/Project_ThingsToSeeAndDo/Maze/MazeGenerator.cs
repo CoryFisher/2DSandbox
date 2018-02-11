@@ -6,84 +6,54 @@ using UnityEngine;
 
 public class MazeGenerator : Singleton<MazeGenerator>
 {
-	bool accumulatingCompletionData;
-	MazeObject mazeObject = null;
-	bool generatingMaze = false;
-	bool solvingMaze = false;
-	bool finished = false;
-	bool doTheDeed = false;
-
-	public GameObject gridCellPrefab;
-	public Sprite[] CellWallSprites;
-	public bool UseDebugControlKeys = false;
-	public int GridSize = 20;
-
+	MazeObject currentMazeObject;
+	bool finished;
 	
 	private void Awake()
 	{
 		RegisterSingletonInstance(this);
 	}
 
-	private void Update()
+	public bool FinishedGenerating()
 	{
-		if (UseDebugControlKeys)
-		{
-			if (Input.GetKeyDown(KeyCode.Space) && !generatingMaze && !solvingMaze)
-			{
-				doTheDeed = !doTheDeed;
-			}
-		}
-
-		if (!generatingMaze && !solvingMaze && doTheDeed)
-		{
-			if (mazeObject != null)
-			{
-				Destroy(mazeObject.gameObject);
-				mazeObject = null;
-			}
-
-			CreateNewMaze(GridSize, GridSize);
-		}
-
-		if (generatingMaze && finished)
-		{
-			generatingMaze = false;
-			solvingMaze = true;
-
-			MazeSolver.Get().CalculateShortestPath(mazeObject);
-		}
-
-		if (solvingMaze && MazeSolver.Get().FinishedCalculating())
-		{
-			solvingMaze = false;
-		}
+		return finished;
 	}
 
-	public void CreateNewMaze(int numColumns, int numRows)
+	public MazeObject GetMazeObject()
 	{
-		GameObject obj = new GameObject("Maze_" + numColumns + "x" + numRows);
-		mazeObject = obj.AddComponent<MazeObject>();
-		
-		GenerateMazeData data;
-		data.columns = numColumns;
-		data.rows = numRows;
+		if (finished)
+		{
+			return currentMazeObject;
+		}
+		return null;
+	}
+
+	public void CreateNewMaze(int numColumns, int numRows, GameObject gridCellPrefab, bool async = false)
+	{
+		Debug.Log("MazeGenerator::CreateNewMaze()");
 
 		finished = false;
-		generatingMaze = true;
 
-		StartCoroutine("CoGenerateNewMaze", data);
+		GameObject obj = new GameObject("Maze_" + numColumns + "x" + numRows);
+		currentMazeObject = obj.AddComponent<MazeObject>();
+		currentMazeObject.SetDimensions(numColumns, numRows);
+		currentMazeObject.SetCellPrefab(gridCellPrefab);
+
+		if (async)
+		{
+			StartCoroutine("CoGenerateNewMaze");
+		}
+		else
+		{
+			var co = currentMazeObject.CreateMaze();
+			while (co.MoveNext()) { }
+			finished = true;
+		}
 	}
 
-	struct GenerateMazeData	{ public int columns; public int rows; }
-	IEnumerator CoGenerateNewMaze(GenerateMazeData data)
+	IEnumerator CoGenerateNewMaze()
 	{
-		yield return mazeObject.CreateMaze(data.columns, data.rows, gridCellPrefab);
+		yield return currentMazeObject.CreateMaze();
 		finished = true;
-	}
-
-	public Sprite GetCellWallSprite(int index)
-	{
-		Debug.Assert(index >=0 && index < CellWallSprites.Length);
-		return CellWallSprites[index];
 	}
 }

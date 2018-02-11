@@ -84,7 +84,7 @@ public class MazeCellObject : MonoBehaviour
 			{
 				spriteIndex |= (int)DirectionFlags.Left;
 			}
-			wallSpriteRenderer.sprite = MazeGenerator.Get().GetCellWallSprite(spriteIndex);
+			wallSpriteRenderer.sprite = MazeManager.Get().GetCellWallSprite(spriteIndex);
 		}
 	}
 

@@ -21,6 +21,7 @@ GameObject:
   - component: {fileID: 4886122205397820}
   - component: {fileID: 114047315982930652}
   - component: {fileID: 114572152647041486}
+  - component: {fileID: 114633264785013906}
   m_Layer: 0
   m_Name: MazeManager
   m_TagString: Untagged
@@ -52,6 +53,29 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 977112b2e6a37204a835396d4e532fdc, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+--- !u!114 &114572152647041486
+MonoBehaviour:
+  m_ObjectHideFlags: 1
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 100100000}
+  m_GameObject: {fileID: 1121374006995240}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4437feefd90352b4cb743fa82e3b8154, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+--- !u!114 &114633264785013906
+MonoBehaviour:
+  m_ObjectHideFlags: 1
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 100100000}
+  m_GameObject: {fileID: 1121374006995240}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 34ccae8fb5dfeaa4082fb7622f8f7837, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  GridSize: 20
   gridCellPrefab: {fileID: 1792888558452640, guid: a61f3a7e7013c3145b7b1284a52da26f,
     type: 2}
   CellWallSprites:
@@ -71,16 +95,3 @@ MonoBehaviour:
   - {fileID: 21300000, guid: 864e44d7c7485194f9452d058540e5ff, type: 3}
   - {fileID: 21300000, guid: 32fe7de397662574dada946e61ab5719, type: 3}
   - {fileID: 21300000, guid: 544b661817bf4d7478a83a10ea6767f0, type: 3}
-  UseDebugControlKeys: 1
-  GridSize: 50
---- !u!114 &114572152647041486
-MonoBehaviour:
-  m_ObjectHideFlags: 1
-  m_PrefabParentObject: {fileID: 0}
-  m_PrefabInternal: {fileID: 100100000}
-  m_GameObject: {fileID: 1121374006995240}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 4437feefd90352b4cb743fa82e3b8154, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
