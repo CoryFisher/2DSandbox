@@ -75,8 +75,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 34ccae8fb5dfeaa4082fb7622f8f7837, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  GridSize: 20
-  gridCellPrefab: {fileID: 1792888558452640, guid: a61f3a7e7013c3145b7b1284a52da26f,
+  GridSize: 25
+  GeneratorTickSpeed: 100
+  SolverTickSpeed: 100
+  GridCellPrefab: {fileID: 1792888558452640, guid: a61f3a7e7013c3145b7b1284a52da26f,
     type: 2}
   CellWallSprites:
   - {fileID: 21300000, guid: 75c89aac32f5721498db5e82e3deb098, type: 3}

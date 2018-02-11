@@ -4,56 +4,38 @@ using System.Collections.Generic;
 using System.IO;
 using UnityEngine;
 
-public class MazeGenerator : Singleton<MazeGenerator>
+public class MazeGenerator : MonoBehaviour
 {
 	MazeObject currentMazeObject;
-	bool finished;
+	bool isGenerating;
 	
-	private void Awake()
+	public bool IsGenerating()
 	{
-		RegisterSingletonInstance(this);
-	}
-
-	public bool FinishedGenerating()
-	{
-		return finished;
+		return isGenerating;
 	}
 
 	public MazeObject GetMazeObject()
 	{
-		if (finished)
-		{
-			return currentMazeObject;
-		}
-		return null;
+		isGenerating = false;
+		return currentMazeObject;
 	}
 
-	public void CreateNewMaze(int numColumns, int numRows, GameObject gridCellPrefab, bool async = false)
+	public IEnumerator CreateNewMaze(int numColumns, int numRows, GameObject gridCellPrefab, Vector3 worldPosition)
 	{
-		Debug.Log("MazeGenerator::CreateNewMaze()");
-
-		finished = false;
+		Debug.Log("MazeGenerator :: CreateNewMaze()");
+		isGenerating = true;
 
 		GameObject obj = new GameObject("Maze_" + numColumns + "x" + numRows);
+		
 		currentMazeObject = obj.AddComponent<MazeObject>();
+		currentMazeObject.SetPosition(worldPosition);
 		currentMazeObject.SetDimensions(numColumns, numRows);
 		currentMazeObject.SetCellPrefab(gridCellPrefab);
 
-		if (async)
+		var co = currentMazeObject.CreateMaze();
+		while (co.MoveNext()) 
 		{
-			StartCoroutine("CoGenerateNewMaze");
+			yield return null;
 		}
-		else
-		{
-			var co = currentMazeObject.CreateMaze();
-			while (co.MoveNext()) { }
-			finished = true;
-		}
-	}
-
-	IEnumerator CoGenerateNewMaze()
-	{
-		yield return currentMazeObject.CreateMaze();
-		finished = true;
 	}
 }

@@ -43,12 +43,14 @@ public class MazeCellObject : MonoBehaviour
 {
 	public static Color unvisitedColor = Color.white;
 	public static Color visitedColor = Color.magenta;
+	public static Color currentVisitedColor = Color.cyan;
 
 	public static Color minDistFromStartColor = Color.green;
 	public static Color maxDistFromStartColor = Color.red;
 	
 	public static Color shortestPathColor = Color.yellow;
-	public static Color endCellColor = Color.black;
+	public static Color startCellColor = Color.white;
+	public static Color endCellColor = Color.blue;
 
 	public SpriteRenderer cellSpriteRenderer;
 	public SpriteRenderer wallSpriteRenderer;
@@ -108,6 +110,16 @@ public class MazeCellObject : MonoBehaviour
 			if (data.IsEndCell())
 			{
 				cellSpriteRenderer.color = endCellColor;
+			}
+
+			if (data.IsStartCell())
+			{
+				cellSpriteRenderer.color = startCellColor;
+			}
+
+			if (data.IsCurrentVisited())
+			{
+				cellSpriteRenderer.color = currentVisitedColor;
 			}
 		}
 	}
@@ -169,10 +181,12 @@ public class MazeCellData
 	
 	// maze generation data
 	bool visited;
+	bool isCurrentVisited;
 	int distanceFromStart;
 	MazeCellData solverParent;
 	bool isOnShortestPath;
-	bool isEndCell = false;
+	bool isStartCell;
+	bool isEndCell;
 	public int maxDistanceFromStart;
 	
 
@@ -323,5 +337,33 @@ public class MazeCellData
 	public bool IsEndCell()
 	{
 		return isEndCell;
+	}
+
+	public void SetIsCurrentVisitor(bool isCurrentVisited)
+	{
+		this.isCurrentVisited = isCurrentVisited;
+		if (parent != null)
+		{
+			parent.UpdateCellSprite();
+		}
+	}
+
+	public bool IsCurrentVisited()
+	{
+		return isCurrentVisited;
+	}
+
+	public void SetIsStartCell(bool isStartCell)
+	{
+		this.isStartCell = isStartCell;
+		if (parent != null)
+		{
+			parent.UpdateCellSprite();
+		}
+	}
+
+	public bool IsStartCell()
+	{
+		return isStartCell;
 	}
 }

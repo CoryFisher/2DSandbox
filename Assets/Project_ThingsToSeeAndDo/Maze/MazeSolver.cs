@@ -21,50 +21,36 @@ public class MazePath
 	}
 }
 
-public class MazeSolver : Singleton<MazeSolver>
+public class MazeSolver : MonoBehaviour
 {
 	MazePath path;
 	MazeObject mazeObject;
-	bool finished = true;
-
-	private void Awake()
-	{
-		RegisterSingletonInstance(this);
-	}
-
-	public void CalculateShortestPath(MazeObject mazeObject, bool async = false)
-	{
-		this.mazeObject = mazeObject;
-		finished = false;
-
-		if (async)
-		{
-			StartCoroutine("CoCalculateShortestPath");
-		}
-		else
-		{
-			var co = CoCalculateShortestPath();
-			while (co.MoveNext()) { }
-			finished = true;
-		}
-	}
-
-	public bool FinishedCalculating()
-	{
-		return finished;
-	}
-
+	bool isSolving;
+	
 	public MazePath GetPath()
 	{
-		if (finished)
-		{
-			return path;
-		}
-		return null;
+		isSolving = false;
+		return path;
 	}
 
-	IEnumerator CoCalculateShortestPath()
+	public MazeObject GetMazeObject()
 	{
+		return mazeObject;
+	}
+
+	public bool IsSolving()
+	{
+		return isSolving;
+	}
+
+	public IEnumerator CalculateShortestPath(MazeObject mazeObject)
+	{
+		this.mazeObject = mazeObject;
+
+		Debug.Log("MazeSolver :: CalculateShortestPath()");
+
+		isSolving = true;
+
 		MazeData mazeData = mazeObject.GetMazeData();
 
 		MazeCellData start = mazeData.GetStartCell();
@@ -82,6 +68,10 @@ public class MazeSolver : Singleton<MazeSolver>
 
 			if (current == end)
 			{
+				if (visited.Count > 0)
+				{
+					visited[visited.Count - 1].SetIsCurrentVisitor(false);
+				}
 				foundEnd = true;
 				break;
 			}
@@ -99,8 +89,14 @@ public class MazeSolver : Singleton<MazeSolver>
 				}
 			}
 
-			visited.Add(current);
+			if (visited.Count > 0)
+			{
+				visited[visited.Count - 1].SetIsCurrentVisitor(false);
+			}
+			current.SetIsCurrentVisitor(true);
 			current.SetVisited(true);
+
+			visited.Add(current);
 			yield return null;
 		}
 
@@ -122,6 +118,6 @@ public class MazeSolver : Singleton<MazeSolver>
 			yield return null;
 		}
 
-		finished = true;
+		Debug.Log("MazeSolver :: Finished Solving()");
 	}
 }

@@ -73,8 +73,9 @@ public class MazeData
 
 		// generate maze from cells using recursive backtracking (depth-first) algorithm
 		MazeCellData current = GetCell(0);
-		current.SetVisited(true);
 		startCell = current;
+		current.SetVisited(true);
+		current.SetIsStartCell(true);
 		Stack<MazeCellData> cellStack = new Stack<MazeCellData>();
 
 		int numVisited = 1;
@@ -135,6 +136,8 @@ public class MazeData
 			}
 			yield return null;
 		}
+
+		Debug.Log("MazeData::Finished Generating Maze()");
 	}
 	
 	public MazeCellData GetCell(int column, int row)
@@ -187,6 +190,7 @@ public class MazeObject : MonoBehaviour
 	GameObject gridCellPrefab;
 	int columns = -1;
 	int rows = -1;
+	Vector3 position;
 
 	public void SetDimensions(int columns, int rows)
 	{
@@ -197,6 +201,11 @@ public class MazeObject : MonoBehaviour
 	public void SetCellPrefab(GameObject gridCellPrefab)
 	{
 		this.gridCellPrefab = gridCellPrefab;
+	}
+
+	public void SetPosition(Vector3 position)
+	{
+		this.position = position;
 	}
 
 	public MazeData GetMazeData()
@@ -214,14 +223,7 @@ public class MazeObject : MonoBehaviour
 		}
 
 		Debug.Log("MazeObject::CreateMaze()");
-
-		if (cellObjects != null)
-		{
-			foreach (var cellObj in cellObjects)
-			{
-				Destroy(cellObj.gameObject);
-			}
-		}
+				
 		cellObjects = new MazeCellObject[columns * rows];
 		
 		LayoutData layoutData = GetLayoutDataFromDummyObject();
@@ -278,8 +280,8 @@ public class MazeObject : MonoBehaviour
 				var cellObj = Instantiate(gridCellPrefab);
 
 				// place object in world space
-				cellObj.transform.position = new Vector3(layoutData.MinWorldPosition.x + (col * layoutData.CellPlacementWorldOffset),
-														 layoutData.MinWorldPosition.y + (row * layoutData.CellPlacementWorldOffset), 
+				cellObj.transform.position = new Vector3(position.x + layoutData.MinWorldPosition.x + (col * layoutData.CellPlacementWorldOffset),
+														 position.y + layoutData.MinWorldPosition.y + (row * layoutData.CellPlacementWorldOffset), 
 														 0);
 				
 				// child under this gameObject
