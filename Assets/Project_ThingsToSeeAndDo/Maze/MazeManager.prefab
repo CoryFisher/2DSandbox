@@ -22,6 +22,7 @@ GameObject:
   - component: {fileID: 114047315982930652}
   - component: {fileID: 114572152647041486}
   - component: {fileID: 114633264785013906}
+  - component: {fileID: 114046108262868990}
   m_Layer: 0
   m_Name: MazeManager
   m_TagString: Untagged
@@ -42,6 +43,20 @@ Transform:
   m_Father: {fileID: 0}
   m_RootOrder: 0
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &114046108262868990
+MonoBehaviour:
+  m_ObjectHideFlags: 1
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 100100000}
+  m_GameObject: {fileID: 1121374006995240}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c357bd357c9efbc4fa5c9c4a13faa0f2, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  MovementInputDelay: 0.2
+  minHighlight: 0
+  maxHighlight: 0.25
 --- !u!114 &114047315982930652
 MonoBehaviour:
   m_ObjectHideFlags: 1
@@ -76,6 +91,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   GridSize: 25
+  GridsPerLine: 6
   GeneratorTickSpeed: 100
   SolverTickSpeed: 100
   GridCellPrefab: {fileID: 1792888558452640, guid: a61f3a7e7013c3145b7b1284a52da26f,
@@ -97,3 +113,7 @@ MonoBehaviour:
   - {fileID: 21300000, guid: 864e44d7c7485194f9452d058540e5ff, type: 3}
   - {fileID: 21300000, guid: 32fe7de397662574dada946e61ab5719, type: 3}
   - {fileID: 21300000, guid: 544b661817bf4d7478a83a10ea6767f0, type: 3}
+  PlayerSprite: {fileID: 21300000, guid: 09efb8f87a4977c4fbb73fcb66cd620c, type: 3}
+  EnemyEntitySprite: {fileID: 21300000, guid: aa821d60acbe39d48bec58ec734ce213, type: 3}
+  HealthEntitySprite: {fileID: 21300000, guid: 44ebf3bf251456048b8fdefb82824ebf, type: 3}
+  MoneyEntitySprite: {fileID: 21300000, guid: c940261e4b48d61438a84ce1023ec5bf, type: 3}

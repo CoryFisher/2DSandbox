@@ -20,9 +20,22 @@ public class MazeGenerator : MonoBehaviour
 		return currentMazeObject;
 	}
 
-	public IEnumerator CreateNewMaze(int numColumns, int numRows, GameObject gridCellPrefab, Vector3 worldPosition)
+	public void CreateNewMaze(int numColumns, int numRows, GameObject gridCellPrefab, Vector3 worldPosition)
 	{
-		Debug.Log("MazeGenerator :: CreateNewMaze()");
+		//Debug.Log("MazeGenerator :: CreateNewMaze()");
+
+		GameObject obj = new GameObject("Maze_" + numColumns + "x" + numRows);
+
+		currentMazeObject = obj.AddComponent<MazeObject>();
+		currentMazeObject.SetPosition(worldPosition);
+		currentMazeObject.SetDimensions(numColumns, numRows);
+		currentMazeObject.SetCellPrefab(gridCellPrefab);
+		currentMazeObject.CreateMaze();
+	}
+
+	public IEnumerator CoCreateNewMaze(int numColumns, int numRows, GameObject gridCellPrefab, Vector3 worldPosition)
+	{
+		//Debug.Log("MazeGenerator :: CoCreateNewMaze()");
 		isGenerating = true;
 
 		GameObject obj = new GameObject("Maze_" + numColumns + "x" + numRows);
@@ -32,7 +45,7 @@ public class MazeGenerator : MonoBehaviour
 		currentMazeObject.SetDimensions(numColumns, numRows);
 		currentMazeObject.SetCellPrefab(gridCellPrefab);
 
-		var co = currentMazeObject.CreateMaze();
+		var co = currentMazeObject.CoCreateMaze();
 		while (co.MoveNext()) 
 		{
 			yield return null;

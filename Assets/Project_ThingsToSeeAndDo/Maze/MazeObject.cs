@@ -67,9 +67,20 @@ public class MazeData
 		}
 	}
 
-	public IEnumerator GenerateMaze()
+	public MazeCellData[] GetCells()
 	{
-		Debug.Log("MazeData::GenerateMaze()");
+		return cells;
+	}
+
+	public void GenerateMaze()
+	{
+		var co = CoGenerateMaze();
+		while (co.MoveNext()) {	}
+	}
+
+	public IEnumerator CoGenerateMaze()
+	{
+		//Debug.Log("MazeData::GenerateMaze()");
 
 		// generate maze from cells using recursive backtracking (depth-first) algorithm
 		MazeCellData current = GetCell(0);
@@ -137,7 +148,7 @@ public class MazeData
 			yield return null;
 		}
 
-		Debug.Log("MazeData::Finished Generating Maze()");
+		//Debug.Log("MazeData::Finished Generating Maze()");
 	}
 	
 	public MazeCellData GetCell(int column, int row)
@@ -212,8 +223,28 @@ public class MazeObject : MonoBehaviour
 	{
 		return mazeData;
 	}
+
+	public void CreateMaze()
+	{
+		if (gridCellPrefab == null ||
+			columns < 0 || rows < 0)
+		{
+			Debug.LogError("MazeObject::CoCreateMaze() : Must set dimensions and cell prefabs before calling CreateMaze");
+			return;
+		}
+
+		Debug.Log("MazeObject::CreateMaze()");
+
+		cellObjects = new MazeCellObject[columns * rows];
+
+		LayoutData layoutData = GetLayoutDataFromDummyObject();
+		mazeData = new MazeData(columns, rows);
+		CreateAndFillCells(layoutData, mazeData);
+
+		mazeData.GenerateMaze();
+	}
 	
-	public IEnumerator CreateMaze()
+	public IEnumerator CoCreateMaze()
 	{
 		if (gridCellPrefab == null ||
 			columns < 0 || rows < 0)
@@ -222,7 +253,7 @@ public class MazeObject : MonoBehaviour
 			yield break;
 		}
 
-		Debug.Log("MazeObject::CreateMaze()");
+		//Debug.Log("MazeObject::CoCreateMaze()");
 				
 		cellObjects = new MazeCellObject[columns * rows];
 		
@@ -230,7 +261,7 @@ public class MazeObject : MonoBehaviour
 		mazeData = new MazeData(columns, rows);
 		CreateAndFillCells(layoutData, mazeData);
 
-		var co = mazeData.GenerateMaze();
+		var co = mazeData.CoGenerateMaze();
 		while (co.MoveNext())
 		{ 
 			yield return null;

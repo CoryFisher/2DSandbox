@@ -47,7 +47,7 @@ public class MazeSolver : MonoBehaviour
 	{
 		this.mazeObject = mazeObject;
 
-		Debug.Log("MazeSolver :: CalculateShortestPath()");
+		//Debug.Log("MazeSolver :: CalculateShortestPath()");
 
 		isSolving = true;
 
@@ -78,7 +78,7 @@ public class MazeSolver : MonoBehaviour
 
 			foreach (Direction dir in Enum.GetValues(typeof(Direction)))
 			{
-				if (current.GetWallIsOpen(dir))
+				if (!current.HasWall(dir))
 				{
 					var neighbor = current.GetNeighbor(dir);
 					if (!visited.Contains(neighbor))
@@ -118,6 +118,6 @@ public class MazeSolver : MonoBehaviour
 			yield return null;
 		}
 
-		Debug.Log("MazeSolver :: Finished Solving()");
+		//Debug.Log("MazeSolver :: Finished Solving()");
 	}
 }

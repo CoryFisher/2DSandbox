@@ -54,6 +54,7 @@ public class MazeCellObject : MonoBehaviour
 
 	public SpriteRenderer cellSpriteRenderer;
 	public SpriteRenderer wallSpriteRenderer;
+	public SpriteRenderer overlaySpriteRenderer;
 
 	MazeCellData data;
 
@@ -70,19 +71,19 @@ public class MazeCellObject : MonoBehaviour
 		{
 			// update sprite
 			int spriteIndex = 0;
-			if (data.GetWallIsOpen(Direction.Up))
+			if (!data.HasWall(Direction.Up))
 			{
 				spriteIndex |= (int)DirectionFlags.Up;
 			}
-			if (data.GetWallIsOpen(Direction.Right))
+			if (!data.HasWall(Direction.Right))
 			{
 				spriteIndex |= (int)DirectionFlags.Right;
 			}
-			if (data.GetWallIsOpen(Direction.Down))
+			if (!data.HasWall(Direction.Down))
 			{
 				spriteIndex |= (int)DirectionFlags.Down;
 			}
-			if (data.GetWallIsOpen(Direction.Left))
+			if (!data.HasWall(Direction.Left))
 			{
 				spriteIndex |= (int)DirectionFlags.Left;
 			}
@@ -94,36 +95,54 @@ public class MazeCellObject : MonoBehaviour
 	{
 		if (data != null)
 		{
-			float t = (float)data.GetDistanceFromStart() / (float)data.GetMaxDistanceFromStart();
-			cellSpriteRenderer.color = Color.Lerp(minDistFromStartColor, maxDistFromStartColor, t);
-
-			if (data.Visited())
-			{
-				cellSpriteRenderer.color = visitedColor;
-			}
-
-			if (data.GetIsOnShortestPath())
-			{
-				cellSpriteRenderer.color = shortestPathColor;
-			}
-
-			if (data.IsEndCell())
-			{
-				cellSpriteRenderer.color = endCellColor;
-			}
-
-			if (data.IsStartCell())
-			{
-				cellSpriteRenderer.color = startCellColor;
-			}
-
 			if (data.IsCurrentVisited())
 			{
 				cellSpriteRenderer.color = currentVisitedColor;
 			}
+			else if (data.IsEndCell())
+			{
+				cellSpriteRenderer.color = endCellColor;
+			}
+			else if (data.IsStartCell())
+			{
+				cellSpriteRenderer.color = startCellColor;
+			}
+			else if (data.Visited())
+			{
+				cellSpriteRenderer.color = visitedColor;
+			}
+			else if (data.GetIsOnShortestPath())
+			{
+				cellSpriteRenderer.color = shortestPathColor;
+			}
+			else
+			{
+				float t = (float)data.GetDistanceFromStart() / (float)data.GetMaxDistanceFromStart();
+				cellSpriteRenderer.color = Color.Lerp(minDistFromStartColor, maxDistFromStartColor, t);
+			}
 		}
 	}
-	
+
+	public void UpdateOverlaySprite()
+	{
+		if (data != null)
+		{
+			if (data.IsPlayer())
+			{
+				overlaySpriteRenderer.sprite = MazeManager.Get().PlayerSprite;
+			}
+			else if (data.GetEntity() != CellEntityType.None)
+			{
+				overlaySpriteRenderer.sprite = MazeManager.Get().GetEntitySprite(data.GetEntity());
+			}
+			else
+			{
+				overlaySpriteRenderer.sprite = null;
+			}
+		}
+	}
+
+
 	public void DrawLinesToNieghbors()
 	{
 		if (data != null)
@@ -187,8 +206,10 @@ public class MazeCellData
 	bool isOnShortestPath;
 	bool isStartCell;
 	bool isEndCell;
+	bool isPlayer;
 	public int maxDistanceFromStart;
-	
+	CellEntityType entity;
+
 
 	public MazeCellData()
 	{
@@ -234,9 +255,9 @@ public class MazeCellData
 		}
 	}
 
-	public bool GetWallIsOpen(Direction dir)
+	public bool HasWall(Direction dir)
 	{
-		return walls[(int)dir] == false;
+		return walls[(int)dir];
 	}
 
 	public bool HasUnvisitedNeighbors()
@@ -365,5 +386,55 @@ public class MazeCellData
 	public bool IsStartCell()
 	{
 		return isStartCell;
+	}
+
+	public void SetIsPlayer(bool isPlayer)
+	{
+		this.isPlayer = isPlayer;
+		if (parent != null)
+		{
+			parent.UpdateOverlaySprite();
+		}
+	}
+	
+	public bool IsPlayer()
+	{
+		return isPlayer;
+	}
+
+	public void SetEntity(CellEntityType entity)
+	{
+		this.entity = entity;
+		if (parent != null)
+		{
+			parent.UpdateOverlaySprite();
+		}
+	}
+
+	public CellEntityType GetEntity()
+	{
+		return entity;
+	}
+
+	public bool IsDeadEnd()
+	{
+		int numOpenWalls = 0;
+		if (!HasWall(Direction.Up))
+		{
+			++numOpenWalls;
+		}
+		if (!HasWall(Direction.Right))
+		{
+			++numOpenWalls;
+		}
+		if (!HasWall(Direction.Down))
+		{
+			++numOpenWalls;
+		}
+		if (!HasWall(Direction.Left))
+		{
+			++numOpenWalls;
+		}
+		return numOpenWalls == 1;
 	}
 }
