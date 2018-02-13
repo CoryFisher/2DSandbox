@@ -85,8 +85,8 @@ public class MazeData
 		// generate maze from cells using recursive backtracking (depth-first) algorithm
 		MazeCellData current = GetCell(0);
 		startCell = current;
-		current.SetVisited(true);
-		current.SetIsStartCell(true);
+		current.SetCellAttribute(CellAttribute.Visited, true);
+		current.SetCellAttribute(CellAttribute.StartCell, true);
 		Stack<MazeCellData> cellStack = new Stack<MazeCellData>();
 
 		int numVisited = 1;
@@ -105,14 +105,14 @@ public class MazeData
 				{
 					direction = (Direction)UnityEngine.Random.Range(0, Enum.GetValues(typeof(Direction)).Length);
 					next = current.GetNeighbor(direction);
-				} while (next == null || next.Visited());
+				} while (next == null || next.GetCellAttribute(CellAttribute.Visited));
 
 				// push current to stack
 				cellStack.Push(current);
 
 				// remove walls between current and next
-				current.SetWallIsOpen(direction, true);
-				next.SetWallIsOpen(DirectionHelper.OppositeOf(direction), true);
+				current.SetWall(direction, false);
+				next.SetWall(DirectionHelper.OppositeOf(direction), false);
 
 				// dist from start
 				int distFromStart = current.GetDistanceFromStart() + 1;
@@ -124,7 +124,7 @@ public class MazeData
 
 				// make next cell current and mark as visited
 				current = next;
-				current.SetVisited(true);
+				current.SetCellAttribute(CellAttribute.Visited, true);
 				++numVisited;
 
 				yield return null;
@@ -137,13 +137,13 @@ public class MazeData
 
 		foreach (var cell in cells)
 		{
-			cell.SetVisited(false);
+			cell.SetCellAttribute(CellAttribute.Visited, false);
 			cell.SetMaxDistanceFromStart(maxDistFromStart);
 			if (cell.GetDistanceFromStart() == maxDistFromStart && endCell == null)
 			{
 				// just take the first one
 				endCell = cell;
-				cell.SetIsEndCell(true);
+				cell.SetCellAttribute(CellAttribute.EndCell, true);
 			}
 			yield return null;
 		}
@@ -323,8 +323,7 @@ public class MazeObject : MonoBehaviour
 				cellObjects[(row * columns) + col] = cellObjScript;
 
 				var cellDataScript = mazeData.GetCell(col, row);
-				cellDataScript.SetParentObject(cellObjScript);
-				cellObjScript.SetData(cellDataScript);
+				cellDataScript.SetDisplayObject(cellObjScript);
 			}
 		}
 	}

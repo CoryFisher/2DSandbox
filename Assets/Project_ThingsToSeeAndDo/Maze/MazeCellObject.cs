@@ -3,22 +3,8 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-public enum Direction
-{
-	Up,
-	Right,
-	Down,
-	Left,
-}
 
-[Flags]
-public enum DirectionFlags
-{
-	Up = 8,
-	Right = 4,
-	Down = 2,
-	Left = 1,
-}
+
 
 public class DirectionHelper
 {
@@ -41,174 +27,69 @@ public class DirectionHelper
 
 public class MazeCellObject : MonoBehaviour
 {
-	public static Color unvisitedColor = Color.white;
-	public static Color visitedColor = Color.magenta;
-	public static Color currentVisitedColor = Color.cyan;
-
-	public static Color minDistFromStartColor = Color.green;
-	public static Color maxDistFromStartColor = Color.red;
-	
-	public static Color shortestPathColor = Color.yellow;
-	public static Color startCellColor = Color.white;
-	public static Color endCellColor = Color.blue;
-
 	public SpriteRenderer cellSpriteRenderer;
 	public SpriteRenderer wallSpriteRenderer;
 	public SpriteRenderer overlaySpriteRenderer;
-
-	MazeCellData data;
-
-	public void SetData(MazeCellData data)
+	
+	public void SetCellSprite(Sprite cellSprite)
 	{
-		this.data = data;
-		UpdateWallSprite();
-		UpdateCellSprite();
+		cellSpriteRenderer.sprite = cellSprite;
 	}
 
-	public void UpdateWallSprite()
+	public void SetWallSprite(Sprite wallSprite)
 	{
-		if (data != null)
-		{
-			// update sprite
-			int spriteIndex = 0;
-			if (!data.HasWall(Direction.Up))
-			{
-				spriteIndex |= (int)DirectionFlags.Up;
-			}
-			if (!data.HasWall(Direction.Right))
-			{
-				spriteIndex |= (int)DirectionFlags.Right;
-			}
-			if (!data.HasWall(Direction.Down))
-			{
-				spriteIndex |= (int)DirectionFlags.Down;
-			}
-			if (!data.HasWall(Direction.Left))
-			{
-				spriteIndex |= (int)DirectionFlags.Left;
-			}
-			wallSpriteRenderer.sprite = MazeManager.Get().GetCellWallSprite(spriteIndex);
-		}
+		wallSpriteRenderer.sprite = wallSprite;
 	}
 
-	public void UpdateCellSprite()
+	public void SetOverlaySprite(Sprite overlaySprite)
 	{
-		if (data != null)
-		{
-			if (data.IsCurrentVisited())
-			{
-				cellSpriteRenderer.color = currentVisitedColor;
-			}
-			else if (data.IsEndCell())
-			{
-				cellSpriteRenderer.color = endCellColor;
-			}
-			else if (data.IsStartCell())
-			{
-				cellSpriteRenderer.color = startCellColor;
-			}
-			else if (data.Visited())
-			{
-				cellSpriteRenderer.color = visitedColor;
-			}
-			else if (data.GetIsOnShortestPath())
-			{
-				cellSpriteRenderer.color = shortestPathColor;
-			}
-			else
-			{
-				float t = (float)data.GetDistanceFromStart() / (float)data.GetMaxDistanceFromStart();
-				cellSpriteRenderer.color = Color.Lerp(minDistFromStartColor, maxDistFromStartColor, t);
-			}
-		}
-	}
-
-	public void UpdateOverlaySprite()
-	{
-		if (data != null)
-		{
-			if (data.IsPlayer())
-			{
-				overlaySpriteRenderer.sprite = MazeManager.Get().PlayerSprite;
-			}
-			else if (data.GetEntity() != CellEntityType.None)
-			{
-				overlaySpriteRenderer.sprite = MazeManager.Get().GetEntitySprite(data.GetEntity());
-			}
-			else
-			{
-				overlaySpriteRenderer.sprite = null;
-			}
-		}
-	}
-
-
-	public void DrawLinesToNieghbors()
-	{
-		if (data != null)
-		{
-			var upNeighbor = data.GetNeighbor(Direction.Up);
-			if (upNeighbor != null)
-			{
-				var neighborObj = upNeighbor.GetParentObject();
-				if (neighborObj != null)
-				{
-					Debug.DrawLine(transform.position, neighborObj.transform.position, Color.red);
-				}
-			}
-			var rightNeighbor = data.GetNeighbor(Direction.Right);
-			if (rightNeighbor != null)
-			{
-				var neighborObj = rightNeighbor.GetParentObject();
-				if (neighborObj != null)
-				{
-					Debug.DrawLine(transform.position, neighborObj.transform.position, Color.yellow);
-				}
-			}
-			var downNeighbor = data.GetNeighbor(Direction.Down);
-			if (downNeighbor != null)
-			{
-				var neighborObj = downNeighbor.GetParentObject();
-				if (neighborObj != null)
-				{
-					Debug.DrawLine(transform.position, neighborObj.transform.position, Color.green);
-				}
-			}
-			var leftNeighbor = data.GetNeighbor(Direction.Left);
-			if (leftNeighbor != null)
-			{
-				var neighborObj = leftNeighbor.GetParentObject();
-				if (neighborObj != null)
-				{
-					Debug.DrawLine(transform.position, neighborObj.transform.position, Color.blue);
-				}
-			}
-		}
-	}
-
-	private void OnMouseDown()
-	{
-		
+		overlaySpriteRenderer.sprite = overlaySprite;
 	}
 }
 
+
+
+
+
+
+[Flags]
+public enum CellAttribute
+{
+	None = 0,
+	CurrentVisited = 1,
+	StartCell = 2,
+	EndCell = 4,
+	ShortestPath = 8,
+	Visited = 16,
+	//DistanceFromStart = 32,
+}
+
+[Flags]
+public enum EntityAttribute
+{
+	None = 0,
+	FogOfWar2 = 1,
+	FogOfWar = 2,
+	Player = 4,
+	Enemy = 8,
+	Health = 16,
+	Money = 32,
+}
+
+// virtual data for a maze cell (neighbors, walls, attributes)
 public class MazeCellData
 {
 	MazeCellData[] neighbors = new MazeCellData[4];
 	bool[] walls = new bool[4];
-	MazeCellObject parent;
-	
-	// maze generation data
-	bool visited;
-	bool isCurrentVisited;
+	MazeCellObject displayObject;
 	int distanceFromStart;
+	int maxDistanceFromStart;
 	MazeCellData solverParent;
-	bool isOnShortestPath;
-	bool isStartCell;
-	bool isEndCell;
-	bool isPlayer;
-	public int maxDistanceFromStart;
-	CellEntityType entity;
+	float distanceRatio;
+
+
+	int cellTypeAttributes;
+	int entityTypeAttributes;
 
 
 	public MazeCellData()
@@ -217,19 +98,23 @@ public class MazeCellData
 		walls[1] = true;
 		walls[2] = true;
 		walls[3] = true;
-		visited = false;
 	}
 
-	public void SetParentObject(MazeCellObject parent)
+	// DISPLAY OBJECT
+	public void SetDisplayObject(MazeCellObject cellObject)
 	{
-		this.parent = parent;
+		this.displayObject = cellObject;
+		UpdateCellSprite();
+		UpdateEntitySprite();
+		UpdateWallSprite();
 	}
 
-	public MazeCellObject GetParentObject()
+	public MazeCellObject GetDisplayObject()
 	{
-		return parent;
+		return displayObject;
 	}
 
+	// GRID NEIGHBORS
 	public void SetNeighbor(Direction dir, MazeCellData neighbor)
 	{
 		neighbors[(int)dir] = neighbor;
@@ -245,26 +130,11 @@ public class MazeCellData
 		return neighbors[(int)dir] != null;
 	}
 
-	public void SetWallIsOpen(Direction dir, bool open)
-	{
-		walls[(int)dir] = !open;
-
-		if (parent != null)
-		{
-			parent.UpdateWallSprite();
-		}
-	}
-
-	public bool HasWall(Direction dir)
-	{
-		return walls[(int)dir];
-	}
-
 	public bool HasUnvisitedNeighbors()
 	{
 		for (int i = 0; i < neighbors.Length; ++i)
 		{
-			if (neighbors[i] != null && neighbors[i].Visited() == false)
+			if (neighbors[i] != null && neighbors[i].GetCellAttribute(CellAttribute.Visited) == false)
 			{
 				return true;
 			}
@@ -272,27 +142,66 @@ public class MazeCellData
 		return false;
 	}
 
-	public void SetVisited(bool visited)
+	public IEnumerable<MazeCellData> GetValidNeighbors()
 	{
-		this.visited = visited;
-		if (parent != null)
+		for (int i = 0; i < neighbors.Length; ++i)
 		{
-			parent.UpdateCellSprite();
+			if (neighbors[i] != null)
+			{
+				yield return neighbors[i];
+			}
 		}
 	}
 
-	public bool Visited()
+	// WALLS
+	public void SetWall(Direction dir, bool enabled)
 	{
-		return visited;
+		walls[(int)dir] = enabled;
+		UpdateWallSprite();
 	}
 
+	public bool HasWall(Direction dir)
+	{
+		return walls[(int)dir];
+	}
+	
+	public bool IsDeadEnd()
+	{
+		int numOpenWalls = 0;
+		foreach (Direction dir in Enum.GetValues(typeof(Direction)))
+		{
+			if (!HasWall(dir))
+			{
+				++numOpenWalls;
+			}
+		}
+		return numOpenWalls == 1;
+	}
+
+	void UpdateWallSprite()
+	{
+		if (displayObject)
+		{
+			int spriteIndex = 0;
+			spriteIndex |= HasWall(Direction.Up)    ? 0 : (int)DirectionFlag.Up;
+			spriteIndex |= HasWall(Direction.Right) ? 0 : (int)DirectionFlag.Right;
+			spriteIndex |= HasWall(Direction.Down)  ? 0 : (int)DirectionFlag.Down;
+			spriteIndex |= HasWall(Direction.Left)  ? 0 : (int)DirectionFlag.Left;
+			displayObject.SetWallSprite(MazeManager.Get().GetCellWallSprite(spriteIndex));
+		}
+	}
+
+	// MAZE PROPERTIES
 	public void SetDistanceFromStart(int dist)
 	{
 		distanceFromStart = dist;
-
-		if (parent != null)
+		if (maxDistanceFromStart > float.Epsilon)
 		{
-			parent.UpdateCellSprite();
+			distanceRatio = (float)distanceFromStart / maxDistanceFromStart;
+		}
+		else
+		{
+			distanceRatio = 1f;
 		}
 	}
 
@@ -304,15 +213,20 @@ public class MazeCellData
 	public void SetMaxDistanceFromStart(int dist)
 	{
 		maxDistanceFromStart = dist;
-		if (parent != null)
+		if (maxDistanceFromStart > float.Epsilon)
 		{
-			parent.UpdateCellSprite();
+			distanceRatio = (float)distanceFromStart / maxDistanceFromStart;
 		}
 	}
 
 	public int GetMaxDistanceFromStart()
 	{
 		return maxDistanceFromStart;
+	}
+
+	public float GetDistanceRatio()
+	{
+		return distanceRatio;
 	}
 
 	public void SetSolverParent(MazeCellData cell)
@@ -326,115 +240,138 @@ public class MazeCellData
 		}
 		solverParent = cell;
 	}
-
+	
 	public MazeCellData GetSolverParent()
 	{
 		return solverParent;
 	}
 
-	public void SetIsOnShortestPath(bool isOnShortestPath)
+	// CELL ATTRIBUTES
+	public void SetCellAttribute(CellAttribute attr, bool val)
 	{
-		this.isOnShortestPath = isOnShortestPath;
-		if (parent != null)
+		if (val)
 		{
-			parent.UpdateCellSprite();
+			cellTypeAttributes |= (int)attr;
+		}
+		else
+		{
+			cellTypeAttributes &= ~(int)attr;
+		}
+		UpdateCellSprite();
+	}
+
+	public bool GetCellAttribute(CellAttribute attr)
+	{
+		return (cellTypeAttributes & (int)attr) != 0;
+	}
+
+	public bool HasAnyAttribute()
+	{
+		return cellTypeAttributes != 0;
+	}
+
+	void UpdateCellSprite()
+	{
+		if (displayObject)
+		{
+			foreach (CellAttribute attr in Enum.GetValues(typeof(CellAttribute)))
+			{
+				if ((cellTypeAttributes & (int)attr) != 0)
+				{
+					displayObject.SetCellSprite(MazeManager.Get().GetCellSprite(attr));
+					// CellAttributes are prioritized so take the first one
+					return;
+				}
+			}
+			displayObject.SetCellSprite(MazeManager.Get().GetCellSprite(CellAttribute.None));
 		}
 	}
 
-	public bool GetIsOnShortestPath()
+	// ENTITY ATTRIBUTES
+	public void SetEntityAttribute(EntityAttribute attr, bool val)
 	{
-		return isOnShortestPath;
+		if (val)
+		{
+			entityTypeAttributes |= (int)attr;
+		}
+		else
+		{
+			entityTypeAttributes &= ~(int)attr;
+		}
+		UpdateEntitySprite();
 	}
 
-	public void SetIsEndCell(bool isEndCell)
+	public bool GetEntityAttribute(EntityAttribute attr)
 	{
-		this.isEndCell = isEndCell;
-		if (parent != null)
-		{
-			parent.UpdateCellSprite();
+		return (entityTypeAttributes & (int)attr) != 0;
+	}
+
+	public bool HasAnyEntity()
+	{
+		// don't count FogOfWar as a real entity
+		return  entityTypeAttributes != 0 && 
+				entityTypeAttributes != (int)EntityAttribute.FogOfWar && 
+				entityTypeAttributes != (int)EntityAttribute.FogOfWar2;
+	}
+
+	void UpdateEntitySprite()
+	{
+		if (displayObject)
+		{	
+			foreach (EntityAttribute attr in Enum.GetValues(typeof(EntityAttribute)))
+			{
+				if ((entityTypeAttributes & (int)attr) != 0)
+				{
+					displayObject.SetOverlaySprite(MazeManager.Get().GetEntitySprite(attr));
+					// EntityAttribute are prioritized so take the first one
+					return;
+				}
+			}
+			displayObject.SetOverlaySprite(MazeManager.Get().GetEntitySprite(EntityAttribute.None));
 		}
 	}
 
-	public bool IsEndCell()
+	// DEBUG
+	public void DrawLinesToNieghbors()
 	{
-		return isEndCell;
-	}
-
-	public void SetIsCurrentVisitor(bool isCurrentVisited)
-	{
-		this.isCurrentVisited = isCurrentVisited;
-		if (parent != null)
+		if (displayObject)
 		{
-			parent.UpdateCellSprite();
+			var upNeighbor = GetNeighbor(Direction.Up);
+			if (upNeighbor != null)
+			{
+				var neighborObj = upNeighbor.GetDisplayObject();
+				if (neighborObj != null)
+				{
+					Debug.DrawLine(displayObject.transform.position, neighborObj.transform.position, Color.red);
+				}
+			}
+			var rightNeighbor = GetNeighbor(Direction.Right);
+			if (rightNeighbor != null)
+			{
+				var neighborObj = rightNeighbor.GetDisplayObject();
+				if (neighborObj != null)
+				{
+					Debug.DrawLine(displayObject.transform.position, neighborObj.transform.position, Color.yellow);
+				}
+			}
+			var downNeighbor = GetNeighbor(Direction.Down);
+			if (downNeighbor != null)
+			{
+				var neighborObj = downNeighbor.GetDisplayObject();
+				if (neighborObj != null)
+				{
+					Debug.DrawLine(displayObject.transform.position, neighborObj.transform.position, Color.green);
+				}
+			}
+			var leftNeighbor = GetNeighbor(Direction.Left);
+			if (leftNeighbor != null)
+			{
+				var neighborObj = leftNeighbor.GetDisplayObject();
+				if (neighborObj != null)
+				{
+					Debug.DrawLine(displayObject.transform.position, neighborObj.transform.position, Color.blue);
+				}
+			}
 		}
-	}
-
-	public bool IsCurrentVisited()
-	{
-		return isCurrentVisited;
-	}
-
-	public void SetIsStartCell(bool isStartCell)
-	{
-		this.isStartCell = isStartCell;
-		if (parent != null)
-		{
-			parent.UpdateCellSprite();
-		}
-	}
-
-	public bool IsStartCell()
-	{
-		return isStartCell;
-	}
-
-	public void SetIsPlayer(bool isPlayer)
-	{
-		this.isPlayer = isPlayer;
-		if (parent != null)
-		{
-			parent.UpdateOverlaySprite();
-		}
-	}
-	
-	public bool IsPlayer()
-	{
-		return isPlayer;
-	}
-
-	public void SetEntity(CellEntityType entity)
-	{
-		this.entity = entity;
-		if (parent != null)
-		{
-			parent.UpdateOverlaySprite();
-		}
-	}
-
-	public CellEntityType GetEntity()
-	{
-		return entity;
-	}
-
-	public bool IsDeadEnd()
-	{
-		int numOpenWalls = 0;
-		if (!HasWall(Direction.Up))
-		{
-			++numOpenWalls;
-		}
-		if (!HasWall(Direction.Right))
-		{
-			++numOpenWalls;
-		}
-		if (!HasWall(Direction.Down))
-		{
-			++numOpenWalls;
-		}
-		if (!HasWall(Direction.Left))
-		{
-			++numOpenWalls;
-		}
-		return numOpenWalls == 1;
 	}
 }

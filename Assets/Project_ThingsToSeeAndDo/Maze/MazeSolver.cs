@@ -70,7 +70,7 @@ public class MazeSolver : MonoBehaviour
 			{
 				if (visited.Count > 0)
 				{
-					visited[visited.Count - 1].SetIsCurrentVisitor(false);
+					visited[visited.Count - 1].SetCellAttribute(CellAttribute.CurrentVisited, false);
 				}
 				foundEnd = true;
 				break;
@@ -91,10 +91,10 @@ public class MazeSolver : MonoBehaviour
 
 			if (visited.Count > 0)
 			{
-				visited[visited.Count - 1].SetIsCurrentVisitor(false);
+				visited[visited.Count - 1].SetCellAttribute(CellAttribute.CurrentVisited, false);
 			}
-			current.SetIsCurrentVisitor(true);
-			current.SetVisited(true);
+			current.SetCellAttribute(CellAttribute.CurrentVisited, true);
+			current.SetCellAttribute(CellAttribute.Visited, true);
 
 			visited.Add(current);
 			yield return null;
@@ -114,7 +114,7 @@ public class MazeSolver : MonoBehaviour
 
 		foreach (var cell in path.GetPathReverse())
 		{
-			cell.SetIsOnShortestPath(true);
+			cell.SetCellAttribute(CellAttribute.ShortestPath, true);
 			yield return null;
 		}
 

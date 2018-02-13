@@ -3,14 +3,6 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-public enum CellEntityType
-{
-	None,
-	Enemy,
-	Health,
-	Money,
-}
-
 public class MazeManager : Singleton<MazeManager>
 {
 	class RoutineAndCallback
@@ -42,8 +34,24 @@ public class MazeManager : Singleton<MazeManager>
 
 	public GameObject GridCellPrefab;
 	public Sprite[] CellWallSprites;
-	public Sprite PlayerSprite;
 	
+	//public Color unvisitedColor		= Color.white;
+	//public Color visitedColor		= Color.magenta;
+	//public Color currentVisitedColor = Color.cyan;	
+	//public Color shortestPathColor	= Color.yellow;
+	//public Color startCellColor		= Color.white;
+	//public Color endCellColor		= Color.blue;
+	public Sprite unvisitedSprite;
+	public Sprite visitedSprite;
+	public Sprite currentVisitedSprite;
+	public Sprite shortestPathSprite;
+	public Sprite startCellSprite;
+	public Sprite endCellSprite;
+	Dictionary<CellAttribute, Sprite> cellSprites = new Dictionary<CellAttribute, Sprite>();
+
+	public Sprite FogOfWarSprite;
+	public Sprite FogOfWar2Sprite;
+	public Sprite PlayerEntitySprite;
 	public Sprite EnemyEntitySprite;
 	public Sprite HealthEntitySprite;
 	public Sprite MoneyEntitySprite;
@@ -56,6 +64,14 @@ public class MazeManager : Singleton<MazeManager>
 		currentRoutines = new List<RoutineAndCallback>();
 		newRoutines = new List<RoutineAndCallback>();
 		solvedMazes = new List<SolvedMaze>();
+
+		cellSprites[CellAttribute.None] = unvisitedSprite;
+		cellSprites[CellAttribute.CurrentVisited] = currentVisitedSprite;
+		cellSprites[CellAttribute.StartCell] = startCellSprite;
+		cellSprites[CellAttribute.EndCell] = endCellSprite;
+		cellSprites[CellAttribute.ShortestPath] = shortestPathSprite;
+		cellSprites[CellAttribute.Visited] = visitedSprite;
+		//cellSprites[CellAttribute.DistanceFromStart] = currentVisitedColor;
 	}
 
 	private void Update()
@@ -109,13 +125,11 @@ public class MazeManager : Singleton<MazeManager>
 			MazeSolver solver = GetNextSolver();
 			var solveMaze = solver.CalculateShortestPath(mazeObject);
 			while (solveMaze.MoveNext() == true) { }
-			//OnSolverComplete(solver);
+			OnSolverComplete(solver);
 
 			DateTime endTime = DateTime.Now;
 			TimeSpan completionTime = endTime - startTime;
 			Debug.Log("completionTime = " + completionTime.TotalSeconds);
-
-			Destroy(mazeObject.gameObject);
 		}
 		else if (Input.GetKeyDown(KeyCode.Tab))
 		{
@@ -129,16 +143,22 @@ public class MazeManager : Singleton<MazeManager>
 		newRoutines.Clear();
 	}
 
-	public Sprite GetEntitySprite(CellEntityType cellEntityType)
+	public Sprite GetEntitySprite(EntityAttribute cellEntityType)
 	{
 		switch (cellEntityType)
 		{
-			case CellEntityType.Enemy:
+			case EntityAttribute.FogOfWar2:
+				return FogOfWar2Sprite;
+			case EntityAttribute.FogOfWar:
+				return FogOfWarSprite;
+			case EntityAttribute.Enemy:
 				return EnemyEntitySprite;
-			case CellEntityType.Health:
+			case EntityAttribute.Health:
 				return HealthEntitySprite;
-			case CellEntityType.Money:
+			case EntityAttribute.Money:
 				return MoneyEntitySprite;
+			case EntityAttribute.Player:
+				return PlayerEntitySprite;
 		}
 		return null;
 	}
@@ -267,11 +287,15 @@ public class MazeManager : Singleton<MazeManager>
 		Debug.Log("Size "+ dimensions.x + ", Iterations " + dimensions.y + ", Average Time " + totalTime);
 	}
 
+	public Sprite GetCellSprite(CellAttribute attr)
+	{
+		return cellSprites[attr];
+	}
+
 	public MazeObject CreateMaze(Vector2Int dimensions)
 	{
 		var mazeGenerator = GetNextGenerator();
-		var generateMaze = mazeGenerator.CoCreateNewMaze(dimensions.x, dimensions.y, GridCellPrefab, Vector3.zero);
-		while (generateMaze.MoveNext() == true) { }
+		mazeGenerator.CreateNewMaze(dimensions.x, dimensions.y, GridCellPrefab, Vector3.zero);
 		return mazeGenerator.GetMazeObject();
 	}
 
@@ -319,4 +343,21 @@ public class MazeManager : Singleton<MazeManager>
 
 		return completionTime;
 	}
+}
+
+public enum Direction
+{
+	Up,
+	Right,
+	Down,
+	Left,
+}
+
+[Flags]
+public enum DirectionFlag
+{
+	Up = 8,
+	Right = 4,
+	Down = 2,
+	Left = 1,
 }
