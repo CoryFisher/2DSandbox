@@ -23,6 +23,22 @@ public class DirectionHelper
 		}
 		return Direction.Up;
 	}
+
+	public static Direction RightOf(Direction dir)
+	{
+		switch (dir)
+		{
+			case Direction.Up:
+				return Direction.Right;
+			case Direction.Right:
+				return Direction.Down;
+			case Direction.Down:
+				return Direction.Left;
+			case Direction.Left:
+				return Direction.Up;
+		}
+		return Direction.Up;
+	}
 }
 
 public class MazeCellObject : MonoBehaviour
@@ -64,16 +80,68 @@ public enum CellAttribute
 	//DistanceFromStart = 32,
 }
 
-[Flags]
-public enum EntityAttribute
+	//None = 0,
+	//FogOfWar2 = 1,
+	//FogOfWar = 2,
+
+public enum EntityType
 {
-	None = 0,
-	FogOfWar2 = 1,
-	FogOfWar = 2,
-	Player = 4,
-	Enemy = 8,
-	Health = 16,
-	Money = 32,
+	None,
+	Player,
+	Enemy,
+	Health,
+	Money,
+}
+
+public abstract class Entity
+{
+	public abstract EntityType GetEntityType();
+	// returns whether the player can move to this cell
+	public abstract bool OnEncounter(MazeRunner player);
+}
+
+public class EnemyEntity : Entity
+{
+	public int Health = 2;
+	public int Defense = 0;
+	public int Damage = 2;
+	public int Exp = 2;
+
+	public override EntityType GetEntityType()
+	{
+		return EntityType.Enemy;
+	}
+
+	public override bool OnEncounter(MazeRunner player)
+	{
+		Health -= Mathf.Max(player.playerDamage - Defense, 0);
+		if (Health < 1)
+		{
+			player.playerExp += Exp;
+			return true;
+		}
+		else
+		{
+			player.TakeDamage(Damage);
+			return false;
+		}
+	}
+}
+
+public class MoneyEntity : Entity
+{
+	public int Value = 25;
+
+	public override EntityType GetEntityType()
+	{
+		return EntityType.Money;
+	}
+
+	public override bool OnEncounter(MazeRunner player)
+	{
+		player.playerMoney += Value;
+		return true;
+	}
 }
 
 // virtual data for a maze cell (neighbors, walls, attributes)
@@ -87,10 +155,9 @@ public class MazeCellData
 	MazeCellData solverParent;
 	float distanceRatio;
 
-
 	int cellTypeAttributes;
-	int entityTypeAttributes;
-
+	Entity entity;
+	bool fogOfWar;
 
 	public MazeCellData()
 	{
@@ -125,6 +192,29 @@ public class MazeCellData
 		return neighbors[(int)dir];
 	}
 
+	public MazeCellData GetAnyConnectedNeighbor()
+	{
+		foreach (var neighbor in neighbors)
+		{
+			if (neighbor != null)
+			{
+				return neighbor;
+			}
+		}
+		return null;
+	}
+
+	public IEnumerable<MazeCellData> GetConnectedNeighbors()
+	{
+		foreach (var neighbor in neighbors)
+		{
+			if (neighbor != null)
+			{
+				yield return neighbor;
+			}
+		}
+	}
+	
 	public bool HasNeighbor(Direction dir)
 	{
 		return neighbors[(int)dir] != null;
@@ -288,47 +378,45 @@ public class MazeCellData
 	}
 
 	// ENTITY ATTRIBUTES
-	public void SetEntityAttribute(EntityAttribute attr, bool val)
+	public void SetEntity(Entity entity)
 	{
-		if (val)
-		{
-			entityTypeAttributes |= (int)attr;
-		}
-		else
-		{
-			entityTypeAttributes &= ~(int)attr;
-		}
+		this.entity = entity;
 		UpdateEntitySprite();
 	}
 
-	public bool GetEntityAttribute(EntityAttribute attr)
+	public Entity GetEntity()
 	{
-		return (entityTypeAttributes & (int)attr) != 0;
+		return entity;
 	}
 
-	public bool HasAnyEntity()
+	public bool HasEntity()
 	{
-		// don't count FogOfWar as a real entity
-		return  entityTypeAttributes != 0 && 
-				entityTypeAttributes != (int)EntityAttribute.FogOfWar && 
-				entityTypeAttributes != (int)EntityAttribute.FogOfWar2;
+		return entity != null;
 	}
 
 	void UpdateEntitySprite()
 	{
 		if (displayObject)
-		{	
-			foreach (EntityAttribute attr in Enum.GetValues(typeof(EntityAttribute)))
+		{
+			if (fogOfWar)
 			{
-				if ((entityTypeAttributes & (int)attr) != 0)
-				{
-					displayObject.SetOverlaySprite(MazeManager.Get().GetEntitySprite(attr));
-					// EntityAttribute are prioritized so take the first one
-					return;
-				}
+				displayObject.SetOverlaySprite(MazeManager.Get().GetFogOfWarSprite());
 			}
-			displayObject.SetOverlaySprite(MazeManager.Get().GetEntitySprite(EntityAttribute.None));
+			else if (entity != null)
+			{
+				displayObject.SetOverlaySprite(MazeManager.Get().GetEntitySprite(entity.GetEntityType()));
+			}
+			else
+			{
+				displayObject.SetOverlaySprite(MazeManager.Get().GetEntitySprite(EntityType.None));
+			}
 		}
+	}
+
+	public void SetFogOfWar(bool val)
+	{
+		fogOfWar = val;
+		UpdateEntitySprite();
 	}
 
 	// DEBUG

@@ -143,24 +143,25 @@ public class MazeManager : Singleton<MazeManager>
 		newRoutines.Clear();
 	}
 
-	public Sprite GetEntitySprite(EntityAttribute cellEntityType)
+	public Sprite GetEntitySprite(EntityType cellEntityType)
 	{
 		switch (cellEntityType)
-		{
-			case EntityAttribute.FogOfWar2:
-				return FogOfWar2Sprite;
-			case EntityAttribute.FogOfWar:
-				return FogOfWarSprite;
-			case EntityAttribute.Enemy:
+		{	
+			case EntityType.Enemy:
 				return EnemyEntitySprite;
-			case EntityAttribute.Health:
+			case EntityType.Health:
 				return HealthEntitySprite;
-			case EntityAttribute.Money:
+			case EntityType.Money:
 				return MoneyEntitySprite;
-			case EntityAttribute.Player:
+			case EntityType.Player:
 				return PlayerEntitySprite;
 		}
 		return null;
+	}
+
+	public Sprite GetFogOfWarSprite()
+	{	
+		return FogOfWarSprite;
 	}
 
 	private MazeGenerator GetNextGenerator()

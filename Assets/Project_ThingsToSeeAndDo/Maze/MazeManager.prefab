@@ -90,10 +90,17 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: c357bd357c9efbc4fa5c9c4a13faa0f2, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  playerHealth: 100
+  playerHealthMax: 100
+  playerMoney: 0
+  playerDamage: 1
+  playerExp: 0
   StatsText: {fileID: 114067712495971578}
+  cam: {fileID: 0}
   MovementInputDelay: 0.2
   minHighlight: 0
   maxHighlight: 0.25
+  mazeDimensions: {x: 10, y: 10}
 --- !u!114 &114047315982930652
 MonoBehaviour:
   m_ObjectHideFlags: 1

@@ -8,19 +8,22 @@ public class MazeRunner : MonoBehaviour
 {
 	MazeManager mazeManager;
 	MazeObject maze;
-	Vector2Int mazeDimensions = new Vector2Int(10, 10);
 	MazeCellData currentCell;
 	float movementTimer;
 
-	int playerHealth = 100;
-	int playerHealthMax = 100;
-	int playerMoney = 0;
+	public int playerHealth = 100;
+	public int playerHealthMax = 100;
+	public int playerMoney = 0;
+	public int playerDamage = 1;
+	public int playerExp = 0;
 	bool isDead;
 
 	public Text StatsText;
+	public Camera cam;
 	public float MovementInputDelay = 0.2f;
 	public float minHighlight = 0f;
 	public float maxHighlight = 0.25f;
+	public Vector2Int mazeDimensions = new Vector2Int(10, 10);
 
 	KeyCode[] movementKeys = new KeyCode[] { KeyCode.UpArrow, KeyCode.RightArrow, KeyCode.DownArrow, KeyCode.LeftArrow};
 
@@ -50,6 +53,14 @@ public class MazeRunner : MonoBehaviour
 			}
 		}
 
+		// move camera
+		if (currentCell != null)
+		{
+			Vector3 camPos = Vector2.Lerp(cam.transform.position, currentCell.GetDisplayObject().transform.position, Time.deltaTime);
+			camPos.z = -10f;
+			cam.transform.position = camPos;
+		}
+
 		UpdateStatsText();
 	}
 
@@ -59,6 +70,7 @@ public class MazeRunner : MonoBehaviour
 
 		stats += String.Format("Health : {0}/{1}\n", playerHealth, playerHealthMax);
 		stats += String.Format("Money : {0}\n", playerMoney);
+		stats += String.Format("Exp : {0}\n", playerExp);
 		if (isDead)
 		{
 			stats += String.Format("IS DEAD\n");
@@ -75,62 +87,46 @@ public class MazeRunner : MonoBehaviour
 		var nextCell = currentCell.GetNeighbor(dir);
 
 		// something is on the cell
-		if (nextCell.HasAnyEntity())
+		if (nextCell.HasEntity())
 		{
-			foreach (EntityAttribute entity in Enum.GetValues(typeof(EntityAttribute)))
-			{
-				if (nextCell.GetEntityAttribute(entity))
-				{
-					canMove = OnEncounterEntity(currentCell, nextCell, entity);
-				}
-			}
+			canMove = OnEncounterEntity(currentCell, nextCell, nextCell.GetEntity());
 		}
 
-		// move player
-		nextCell.SetEntityAttribute(EntityAttribute.Player, true);
-		nextCell.SetCellAttribute(CellAttribute.CurrentVisited, true);
-		currentCell.SetEntityAttribute(EntityAttribute.Player, false);
-		currentCell.SetCellAttribute(CellAttribute.Visited, true);
-		currentCell.SetCellAttribute(CellAttribute.CurrentVisited, false);
-		currentCell = nextCell;
-
-		// update FogOfWar
-		UpdateFogOfWar();
-
-		// reached the end?
-		if (currentCell == maze.GetMazeData().GetEndCell())
+		if (canMove)
 		{
-			CreateAndInitMaze();
+			// move player
+			//nextCell.SetEntity(EntityAttribute.Player, true);
+			nextCell.SetCellAttribute(CellAttribute.CurrentVisited, true);
+			//currentCell.SetEntityAttribute(EntityAttribute.Player, false);
+			currentCell.SetCellAttribute(CellAttribute.Visited, true);
+			currentCell.SetCellAttribute(CellAttribute.CurrentVisited, false);
+			currentCell = nextCell;
+
+			// increase exp
+			++playerExp;
+
+			// update FogOfWar
+			UpdateFogOfWar();
+			
+			// reached the end?
+			if (currentCell == maze.GetMazeData().GetEndCell())
+			{
+				CreateAndInitMaze();
+			}
 		}
 	}
 
-	bool OnEncounterEntity(MazeCellData currentCell, MazeCellData nextCell, EntityAttribute entity)
+	bool OnEncounterEntity(MazeCellData currentCell, MazeCellData nextCell, Entity entity)
 	{
 		// TODO: visual feedback on entity encounters
 
-		bool canMove = true;
-		switch (entity)
-		{
-			case EntityAttribute.Enemy:
-				TakeDamage(25);
-				//if (!MazeEnemy.IsDead())
-				//{
-				//	canMove = false;
-				//}
-				break;
-			case EntityAttribute.Health:
-				IncreaseHealth(25);
-				break;
-			case EntityAttribute.Money:
-				IncreaseMoney(25);
-				break;
-		}
+		bool canMove = entity.OnEncounter(this);
 
 		// remove the entity if we're moving to the space
-		// TODO: only remove enemies, switch 
+		// TODO: don't remove, switch to off/defeated state?
 		if (canMove)
 		{
-			nextCell.SetEntityAttribute(entity, false);
+			nextCell.SetEntity(null);
 		}
 
 		return canMove;
@@ -150,7 +146,7 @@ public class MazeRunner : MonoBehaviour
 		}
 	}
 
-	private void TakeDamage(int damage)
+	public void TakeDamage(int damage)
 	{
 		playerHealth -= damage;
 		if (playerHealth <= 0)
@@ -169,78 +165,102 @@ public class MazeRunner : MonoBehaviour
 		maze = mazeManager.CreateMaze(mazeDimensions);
 
 		List<MazeCellData> cells = new List<MazeCellData>(maze.GetMazeData().GetCells());
-		
-		// boss enemy on end cell adjacent
-		MazeCellData endCell = maze.GetMazeData().GetEndCell();
-
-		MazeCellData endCellAdjacent = null;
-		Direction direction;
-		// get neighbor
-		do
-		{
-			direction = (Direction)UnityEngine.Random.Range(0, Enum.GetValues(typeof(Direction)).Length);
-			endCellAdjacent = endCell.GetNeighbor(direction);
-		} while (endCellAdjacent == null);
-		endCellAdjacent.SetEntityAttribute(EntityAttribute.Enemy, true);
-
-		// enemies on dead end cells
-		var deadEndCells = cells.FindAll(x => x.IsDeadEnd() && 
-										!x.GetCellAttribute(CellAttribute.EndCell) &&
-										!x.GetCellAttribute(CellAttribute.StartCell));
-		foreach (var cell in deadEndCells)
-		{
-			cell.SetEntityAttribute(EntityAttribute.Enemy, true);
-		}
-
-		// money cells on almost any tile
-		var moneyCells = cells.FindAll(x => x.GetDistanceRatio() > 0.1 && 
-									   x.GetDistanceRatio() < 0.9 &&
-									   !x.HasAnyAttribute() &&
-									   !x.HasAnyEntity());
-		for (int i = 0; i < 10; ++i)
-		{
-			int index = UnityEngine.Random.Range(0, moneyCells.Count);
-			moneyCells[index].SetEntityAttribute(EntityAttribute.Money, true);
-		}
-
-
-		// traps?
-
+		PopulateCells(cells);
 
 		// current cell
 		MazeCellData startCell = maze.GetMazeData().GetStartCell();
 		currentCell = startCell;
 
-		currentCell.SetEntityAttribute(EntityAttribute.Player, true);
+		//currentCell.SetEntityAttribute(EntityAttribute.Player, true);
+		currentCell.SetCellAttribute(CellAttribute.CurrentVisited, true);
 
 		// turn on FogOfWar
 		foreach (var cell in cells)
 		{
-			cell.SetEntityAttribute(EntityAttribute.FogOfWar, true);
+			cell.SetFogOfWar(true);
 		}
 
 		// turn off FogOfWar for starting area
 		UpdateFogOfWar();
+
+		// init camera
+		Vector3 camPos = currentCell.GetDisplayObject().transform.position;
+		camPos.z = cam.transform.position.z;
+		cam.transform.position = camPos;
+		cam.orthographicSize = 2f;
+	}
+
+	private void PopulateCells(List<MazeCellData> cells)
+	{
+		// boss enemy on end cell adjacent
+		MazeCellData endCell = maze.GetMazeData().GetEndCell();
+		MazeCellData endCellAdjacent = null;
+		endCellAdjacent = endCell.GetAnyConnectedNeighbor();
+		if (endCellAdjacent != null)
+		{
+			endCellAdjacent.SetEntity(new EnemyEntity());
+		}
+
+		// money guarded by enemies on dead end cells 
+		var treasureCells = cells.FindAll(x => x.IsDeadEnd() &&
+										!x.GetCellAttribute(CellAttribute.EndCell) &&
+										!x.GetCellAttribute(CellAttribute.StartCell));
+		int numCells = Mathf.FloorToInt(Mathf.Sqrt(Mathf.Min(mazeDimensions.x, mazeDimensions.y)));
+		for (int i = 0; i < numCells; ++i)
+		{
+			int index = UnityEngine.Random.Range(0, treasureCells.Count);
+			if (!treasureCells[index].HasEntity())
+			{
+				treasureCells[index].SetEntity(new MoneyEntity());
+				var neighbor = treasureCells[index].GetAnyConnectedNeighbor();
+				if (neighbor != null)
+				{
+					neighbor.SetEntity(new EnemyEntity());
+				}
+				continue;
+			}
+			--i;
+		}
+
+		// enemies and money cells on random tiles
+		var moneyCells = cells.FindAll(x => x.GetDistanceRatio() > 0.1 &&
+									   x.GetDistanceRatio() < 0.9 &&
+									   !x.HasAnyAttribute() &&
+									   !x.HasEntity());
+		//numCells = Mathf.FloorToInt(Mathf.Sqrt(Mathf.Min(mazeDimensions.x, mazeDimensions.y)));
+		for (int i = 0; i < numCells; ++i)
+		{
+			int index = UnityEngine.Random.Range(0, moneyCells.Count);
+			if (!moneyCells[index].HasEntity())
+			{
+				Entity entity = i % 2 == 0 ? (Entity)(new MoneyEntity()) : (Entity)(new EnemyEntity());
+				moneyCells[index].SetEntity(entity);
+				continue;
+			}
+			--i;
+		}
+
+
+		// traps?
 	}
 
 	private void UpdateFogOfWar()
 	{
-		currentCell.SetEntityAttribute(EntityAttribute.FogOfWar, false);
-		currentCell.SetEntityAttribute(EntityAttribute.FogOfWar2, false);
-		foreach (var neighbor in currentCell.GetValidNeighbors())
-		{
-			neighbor.SetEntityAttribute(EntityAttribute.FogOfWar2, false);
-			neighbor.SetEntityAttribute(EntityAttribute.FogOfWar, false);
+		// clear the 3x3 around the player
+		currentCell.SetFogOfWar(false);
 
-			foreach (var nsquared in neighbor.GetValidNeighbors())
+		foreach (Direction dir in Enum.GetValues(typeof(Direction)))
+		{
+			var neighbor = currentCell.GetNeighbor(dir);
+			if (neighbor != null)
 			{
-				if (nsquared.GetEntityAttribute(EntityAttribute.FogOfWar))
+				neighbor.SetFogOfWar(false);
+				var neighborAdjacent = neighbor.GetNeighbor(DirectionHelper.RightOf(dir));
+				if (neighborAdjacent != null)
 				{
-					nsquared.SetEntityAttribute(EntityAttribute.FogOfWar, false);
-					nsquared.SetEntityAttribute(EntityAttribute.FogOfWar2, true);
+					neighborAdjacent.SetFogOfWar(false);
 				}
 			}
-
 		}
 	}
 
