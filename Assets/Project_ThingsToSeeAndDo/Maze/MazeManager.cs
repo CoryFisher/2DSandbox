@@ -31,16 +31,13 @@ public class MazeManager : Singleton<MazeManager>
 	public int GridsPerLine = 6;
 	public float GeneratorTickSpeed = 100f;
 	public float SolverTickSpeed = 100f;
+	public bool ShowShortestPathSprite;
 
 	public GameObject GridCellPrefab;
 	public Sprite[] CellWallSprites;
-	
-	//public Color unvisitedColor		= Color.white;
-	//public Color visitedColor		= Color.magenta;
-	//public Color currentVisitedColor = Color.cyan;	
-	//public Color shortestPathColor	= Color.yellow;
-	//public Color startCellColor		= Color.white;
-	//public Color endCellColor		= Color.blue;
+
+	public Color cellDistanceStart = Color.green;
+	public Color cellDistanceEnd = Color.red;
 	public Sprite unvisitedSprite;
 	public Sprite visitedSprite;
 	public Sprite currentVisitedSprite;
@@ -55,6 +52,7 @@ public class MazeManager : Singleton<MazeManager>
 	public Sprite EnemyEntitySprite;
 	public Sprite HealthEntitySprite;
 	public Sprite MoneyEntitySprite;
+	
 
 	private void Awake()
 	{
@@ -119,12 +117,12 @@ public class MazeManager : Singleton<MazeManager>
 
 			var mazeGenerator = GetNextGenerator();
 			var generateMaze = mazeGenerator.CoCreateNewMaze(GridSize, GridSize, GridCellPrefab, Vector3.zero);
-			while (generateMaze.MoveNext() == true) { }
+			while (generateMaze.MoveNext()) { }
 			var mazeObject = mazeGenerator.GetMazeObject();
 
 			MazeSolver solver = GetNextSolver();
 			var solveMaze = solver.CalculateShortestPath(mazeObject);
-			while (solveMaze.MoveNext() == true) { }
+			while (solveMaze.MoveNext()) { }
 			OnSolverComplete(solver);
 
 			DateTime endTime = DateTime.Now;
@@ -180,7 +178,6 @@ public class MazeManager : Singleton<MazeManager>
 		MazeSolver ms = mazeSolvers.Find(x => x.IsSolving() == false);
 		if (ms == null)
 		{
-			ms = gameObject.AddComponent<MazeSolver>();
 			mazeSolvers.Add(ms);
 		}
 		return ms;
@@ -201,7 +198,7 @@ public class MazeManager : Singleton<MazeManager>
 
 	private void OnSolverComplete(MazeSolver solver)
 	{
-		var mazePath = solver.GetPath();
+		var mazePath = solver.GetCoPath();
 		var mazeObject = solver.GetMazeObject();
 
 		SolvedMaze solvedMaze = new SolvedMaze();
@@ -223,7 +220,7 @@ public class MazeManager : Singleton<MazeManager>
 				{
 					if (currentRoutine.TickTime == 0f)
 					{
-						while(currentRoutine.Routine.MoveNext() == false)
+						while(currentRoutine.Routine.MoveNext())
 						{
 							// run to completion
 						}
@@ -288,6 +285,11 @@ public class MazeManager : Singleton<MazeManager>
 		Debug.Log("Size "+ dimensions.x + ", Iterations " + dimensions.y + ", Average Time " + totalTime);
 	}
 
+	public Color GetCellSpriteColor(int distanceFromStart, int maxDistanceFromStart)
+	{
+		return Color.Lerp(cellDistanceStart, cellDistanceEnd, (float)distanceFromStart / (float)maxDistanceFromStart);
+	}
+
 	public Sprite GetCellSprite(CellAttribute attr)
 	{
 		return cellSprites[attr];
@@ -306,12 +308,12 @@ public class MazeManager : Singleton<MazeManager>
 
 		var mazeGenerator = GetNextGenerator();
 		var generateMaze = mazeGenerator.CoCreateNewMaze(dimensions.x, dimensions.y, GridCellPrefab, Vector3.zero);
-		while (generateMaze.MoveNext() == true) { }
+		while (generateMaze.MoveNext()) { }
 		var mazeObject = mazeGenerator.GetMazeObject();
 
 		//MazeSolver solver = GetNextSolver();
 		//var solveMaze = solver.CalculateShortestPath(mazeObject);
-		//while (solveMaze.MoveNext() == true) { }
+		//while (solveMaze.MoveNext()) { }
 		//OnSolverComplete(solver);
 
 		DateTime endTime = DateTime.Now;
@@ -329,12 +331,12 @@ public class MazeManager : Singleton<MazeManager>
 
 		var mazeGenerator = GetNextGenerator();
 		var generateMaze = mazeGenerator.CoCreateNewMaze(dimensions.x, dimensions.y, GridCellPrefab, Vector3.zero);
-		while (generateMaze.MoveNext() == true) { }
+		while (generateMaze.MoveNext()) { }
 		var mazeObject = mazeGenerator.GetMazeObject();
 
 		MazeSolver solver = GetNextSolver();
 		var solveMaze = solver.CalculateShortestPath(mazeObject);
-		while (solveMaze.MoveNext() == true) { }
+		while (solveMaze.MoveNext()) { }
 		//OnSolverComplete(solver);
 
 		DateTime endTime = DateTime.Now;

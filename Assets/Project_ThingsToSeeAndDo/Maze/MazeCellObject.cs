@@ -52,6 +52,11 @@ public class MazeCellObject : MonoBehaviour
 		cellSpriteRenderer.sprite = cellSprite;
 	}
 
+	public void SetCellSpriteColor(Color color)
+	{
+		cellSpriteRenderer.color = color;
+	}
+
 	public void SetWallSprite(Sprite wallSprite)
 	{
 		wallSpriteRenderer.sprite = wallSprite;
@@ -192,19 +197,7 @@ public class MazeCellData
 		return neighbors[(int)dir];
 	}
 
-	public MazeCellData GetAnyConnectedNeighbor()
-	{
-		foreach (var neighbor in neighbors)
-		{
-			if (neighbor != null)
-			{
-				return neighbor;
-			}
-		}
-		return null;
-	}
-
-	public IEnumerable<MazeCellData> GetConnectedNeighbors()
+	public IEnumerable<MazeCellData> GetValidNeighbors()
 	{
 		foreach (var neighbor in neighbors)
 		{
@@ -214,7 +207,7 @@ public class MazeCellData
 			}
 		}
 	}
-	
+
 	public bool HasNeighbor(Direction dir)
 	{
 		return neighbors[(int)dir] != null;
@@ -232,15 +225,27 @@ public class MazeCellData
 		return false;
 	}
 
-	public IEnumerable<MazeCellData> GetValidNeighbors()
+	public IEnumerable<MazeCellData> GetConnectedNeighbors()
 	{
-		for (int i = 0; i < neighbors.Length; ++i)
+		foreach (Direction dir in Enum.GetValues(typeof(Direction)))
 		{
-			if (neighbors[i] != null)
+			if (!HasWall(dir))
 			{
-				yield return neighbors[i];
+				yield return GetNeighbor(dir);
 			}
 		}
+	}
+
+	public MazeCellData GetAnyConnectedNeighbor()
+	{
+		foreach (Direction dir in Enum.GetValues(typeof(Direction)))
+		{
+			if (HasNeighbor(dir) && !HasWall(dir))
+			{
+				return GetNeighbor(dir);
+			}
+		}
+		return null;
 	}
 
 	// WALLS
@@ -257,15 +262,15 @@ public class MazeCellData
 	
 	public bool IsDeadEnd()
 	{
-		int numOpenWalls = 0;
+		int numwalls = 0;
 		foreach (Direction dir in Enum.GetValues(typeof(Direction)))
 		{
-			if (!HasWall(dir))
+			if (HasWall(dir))
 			{
-				++numOpenWalls;
+				++numwalls;
 			}
 		}
-		return numOpenWalls == 1;
+		return numwalls == 3;
 	}
 
 	void UpdateWallSprite()
@@ -291,7 +296,7 @@ public class MazeCellData
 		}
 		else
 		{
-			distanceRatio = 1f;
+			distanceRatio = 0f;
 		}
 	}
 
@@ -324,9 +329,10 @@ public class MazeCellData
 		if (cell != neighbors[0] &&
 			cell != neighbors[1] &&
 			cell != neighbors[2] &&
-			cell != neighbors[3])
+			cell != neighbors[3] &&
+			cell != null)
 		{
-			Debug.LogError("cell must be a neighbor to be a solver parent");
+			Debug.LogError("cell must be a neighbor or null to be a solver parent");
 		}
 		solverParent = cell;
 	}
@@ -366,10 +372,24 @@ public class MazeCellData
 		{
 			foreach (CellAttribute attr in Enum.GetValues(typeof(CellAttribute)))
 			{
-				if ((cellTypeAttributes & (int)attr) != 0)
+				if (GetCellAttribute(attr))
 				{
-					displayObject.SetCellSprite(MazeManager.Get().GetCellSprite(attr));
+					if (attr == CellAttribute.ShortestPath && !MazeManager.Get().ShowShortestPathSprite)
+					{
+						continue;
+					}
+
+					if (attr == CellAttribute.Visited)
+					{
+						displayObject.SetCellSpriteColor(MazeManager.Get().GetCellSpriteColor(distanceFromStart, maxDistanceFromStart));
+					}
+					else
+					{
+						displayObject.SetCellSpriteColor(Color.white);
+					}
+
 					// CellAttributes are prioritized so take the first one
+					displayObject.SetCellSprite(MazeManager.Get().GetCellSprite(attr));
 					return;
 				}
 			}

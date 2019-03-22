@@ -124,6 +124,8 @@ GameObject:
   - component: {fileID: 891214648}
   - component: {fileID: 891214647}
   - component: {fileID: 891214646}
+  - component: {fileID: 891214650}
+  - component: {fileID: 891214651}
   m_Layer: 0
   m_Name: Main Camera
   m_TagString: MainCamera
@@ -194,6 +196,42 @@ Transform:
   m_Father: {fileID: 0}
   m_RootOrder: 0
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &891214650
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 891214645}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 34389e99e40637d41a7c75c67e41933f, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  maxSpeed: 5
+  acceleration: 5
+  camSeekLerpFactor: 0.85
+  arrivalRadius: 1
+  arrivalTime: 0.25
+--- !u!50 &891214651
+Rigidbody2D:
+  serializedVersion: 4
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 891214645}
+  m_BodyType: 0
+  m_Simulated: 1
+  m_UseFullKinematicContacts: 0
+  m_UseAutoMass: 0
+  m_Mass: 1
+  m_LinearDrag: 0
+  m_AngularDrag: 0
+  m_GravityScale: 0
+  m_Material: {fileID: 0}
+  m_Interpolate: 0
+  m_SleepingMode: 1
+  m_CollisionDetection: 0
+  m_Constraints: 0
 --- !u!1 &976101981
 GameObject:
   m_ObjectHideFlags: 0
@@ -295,6 +333,11 @@ Prefab:
       propertyPath: m_RootOrder
       value: 2
       objectReference: {fileID: 0}
+    - target: {fileID: 114046108262868990, guid: 1886b12d0eccc6047916fe39af7551bf,
+        type: 2}
+      propertyPath: cam
+      value: 
+      objectReference: {fileID: 891214648}
     m_RemovedComponents: []
   m_ParentPrefab: {fileID: 100100000, guid: 1886b12d0eccc6047916fe39af7551bf, type: 2}
   m_IsPrefabParent: 0
